@@ -1,0 +1,154 @@
+<%- include("../../views/partials/user/header") %>
+<main class="main">
+
+
+   <div class="page-header breadcrumb-wrap">
+       <div class="container">
+           <div class="breadcrumb">
+               <a href="/" rel="nofollow">Home</a>
+               <span></span> Shop
+               <span></span> My Wishlist
+           </div>
+       </div>
+   </div>
+
+
+   <section class="mt-50 mb-50">
+       <div class="container">
+           <div class="row">
+               <div class="col-12">
+                   <div class="table-responsive">
+                       <table class="table shopping-summery text-center clean">
+                           <thead>
+                               <tr class="main-heading">
+                                   <th scope="col">Image</th>
+                                   <th scope="col">Name</th>
+                                   <th scope="col">Price</th>
+                                   <th scope="col">Add to Cart</th>
+                                   <th scope="col">Remove</th>
+                               </tr>
+                           </thead>
+                           <tbody>
+                            <%if(wishlist.products.length>0){%>
+            
+                            <% wishlist.products.forEach((product, index) => { %>
+                             
+                                       <tr>
+                                        <td class="image product-thumbnail">
+                                            <img src="/uploads/re-image/<%= product.productId.productImage[0] %>" style="width: 80px; height: auto;" />
+                                        </td>
+                                           <td class="product-des product-name">
+                                               <h5 class="product-name">
+                                                   <a href="">
+                                                      <%=product.productId.productName%>
+                                                   </a>
+                                               </h5>
+                                               <p class="font-xs">
+                                                   <br />
+                                                  
+                                               </p>
+                                           </td>
+                                           <td class="price" data-title="Price">₹<%=product.productId.salePrice%><span>
+                                          
+                                           </span></td>
+                                           <td class="text-center" data-title="Add to Cart">
+                                               <a href="#" id="cart-btn-<%=index%>" onclick="addToCart('<%=product.productId._id%>','<%= index %>')" class="btn btn-sm">Add to Cart</a>
+                                           </td>
+                                           <td class="action" data-title="Remove">
+                                            <button id="wishlist-btn-<%= index %>" onclick="removeFromWishlist('<%= product.productId._id %>','<%= index %>')">
+                                                Remove ❌
+                                            </button>
+                                           </td>
+                                       </tr>
+                                       <% }); %>
+                                       <%}else{%>
+                                   <tr>
+                                       <td colspan="5" class="text-center">
+                                           <p class="lead mb-4">No items found in Wishlist</p>
+                                       </td>
+                                   </tr>
+                                   <%}%>
+
+                                   
+                           </tbody>
+                       </table>
+                   </div>
+               </div>
+           </div>
+       </div>
+   </section>
+</main>
+<%- include("../../views/partials/user/footer") %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function addToCart(productId,i) {
+      console.log("Button clicked for product:", productId, "Index:", i);
+      fetch('/addToCart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId: productId ,quantity:1 }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Product added to cart successfully!');
+          document.getElementById(`cart-btn-${i}`).textContent = 'Added to Cart';
+          document.getElementById(`cart-btn-${i}`).disabled = true;
+          
+          
+        } else {
+          alert('Failed to add product to cart.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Something went wrong! Please try again.');
+      });
+    }
+
+    async function removeFromWishlist(productId,index) {
+    try {
+        const response = await fetch("/removeFromWishlist", {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ productId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            Swal.fire({
+                title: "Removed!",
+                text: "Removed from Wishlist ❌",
+                icon: "success",
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "OK"
+            });
+
+               location.reload();
+        } else {
+            Swal.fire({
+                title: "Oops!",
+                text: data.message,
+                icon: "warning",
+                confirmButtonColor: "#d33",
+                confirmButtonText: "OK"
+            });
+        }
+    } catch (error) {
+        console.error("Error removing from wishlist:", error);
+        Swal.fire({
+            title: "Error!",
+            text: "Something went wrong. Try again later.",
+            icon: "error",
+            confirmButtonColor: "#d33",
+            confirmButtonText: "OK"
+        });
+    }
+}
+
+</script>

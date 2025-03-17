@@ -1,0 +1,326 @@
+<%- include("../../views/partials/user/header") %>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .order-details-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-info,
+        .shipping-address,
+        .ordered-products {
+            margin-bottom: 30px;
+        }
+
+        .order-info h1,
+        .shipping-address h2,
+        .ordered-products h2 {
+            color: #444;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .order-info p,
+        .shipping-address p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .ordered-products table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .ordered-products th,
+        .ordered-products td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .ordered-products th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .ordered-products tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+    </style>
+
+    <main class="order-details-container">
+        <section class="order-info">
+            <h1>Order Details</h1>
+            <p><strong>Order ID:</strong>
+                <%= order.orderId %>
+            </p>
+            <p><strong>Order Date:</strong>
+                <%= new Date(order.createdOn).toLocaleDateString('en-US', { year: 'numeric' , month: 'long' ,
+                    day: 'numeric' }) %>
+            </p>
+            <p><strong>Total Amount:</strong> ₹<%= order.finalAmount %>
+            </p>
+            <p><strong>Status:</strong> <span id="orderStatus">
+                    <%= order.status %>
+                </span></p>
+            <% if(order.status==='delivered' ) { %>
+                <button id="returnOrderBtn" class="btn btn-danger">Return Order</button>
+                <% } %>
+                    <% if ( order.status !=='delivered' && order.status !=='cancelled' && order.status
+                        !=='Return Requested' && order.status !=='Returned' && order.status !=='Rejected' && order.status !=='shipped' ) { %>
+                        <button class="btn btn-danger btn-sm px-3 shadow-sm rounded-pill"
+                            style="white-space: nowrap; margin-left: -5px;"
+                            onclick="cancelOrder('<%= order.orderId %>')">
+                            <i class="fas fa-times-circle me-1"></i> Cancel Order
+                        </button>
+                        <% } %>
+        </section>
+
+        <section class="shipping-address">
+            <h2>Shipping Address</h2>
+            <p><strong>Name:</strong>
+                <%= address.name %>
+            </p>
+            <p><strong>Address:</strong>
+                <%= address.addressType %>
+            </p>
+            <p><strong>Landmark:</strong>
+                <%= address.landMark %>
+            </p>
+            <p><strong>City:</strong>
+                <%= address.city %>
+            </p>
+            <p><strong>State:</strong>
+                <%= address.state %>
+            </p>
+            <p><strong>Zip Code:</strong>
+                <%= address.pincode %>
+            </p>
+            <p><strong>Phone:</strong>
+                <%= address.phone %>
+            </p>
+            <p><strong>Alt-Phone:</strong>
+                <%= address.altPhone %>
+            </p>
+        </section>
+
+        <section class="ordered-products">
+            <h2>Ordered Products</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% order.orderedItems.forEach(product=> { %>
+                        <tr>
+                            <td>
+                                <%= product.productId.productName %>
+                            </td>
+                            <td class="image product-thumbnail">
+                                <img src="/uploads/re-image/<%= product.productId.productImage[0] %>" alt="#"
+                                    style="width: 80px; height: 80px; object-fit: cover;" />
+                            </td>
+                            <td>
+                                <%= product.quantity %> items
+                            </td>
+                            <td>₹<%= product.price %>
+                            </td>
+                            <td>₹<%= product.quantity * product.price %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+            <% if(order.status==='delivered' ) { %>
+                <a href="/downloadInvoice/<%= order.orderId %>" class="btn btn-primary" id="downloadInvoiceBtn">Download
+                    Invoice</a>
+                <% } %>
+        </section>
+    </main>
+
+    <!-- Return Order Modal -->
+    <div id="returnOrderModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Return Order</h2>
+            <label for="returnReason">Reason for Return:</label>
+            <textarea id="returnReason" rows="4" style="width: 100%;"
+                placeholder="Enter reason for return..."></textarea>
+            <br><br>
+            <button id="submitReturn" class="btn btn-danger">Submit Return Request</button>
+        </div>
+    </div>
+
+    <%- include("../../views/partials/user/footer") %>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                var modal = $("#returnOrderModal");
+                var btn = $("#returnOrderBtn");
+                var closeBtn = $(".close");
+
+                btn.on("click", function () {
+                    document.getElementById("returnOrderModal").style.display = "flex";
+                    modal.show();
+                });
+
+                closeBtn.on("click", function () {
+                    modal.hide();
+                });
+
+                $(window).on("click", function (event) {
+                    if (event.target == modal[0]) {
+                        modal.hide();
+                    }
+                });
+
+                $("#submitReturn").on("click", function () {
+                    var reason = $("#returnReason").val().trim();
+                    if (reason === "") {
+                        Swal.fire("Error", "Please provide a reason for returning the order.", "error");
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "Do you really want to return this order?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#d33",
+                        cancelButtonColor: "#3085d6",
+                        confirmButtonText: "Yes, return it!"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: "/returnOrder",
+                                type: "POST",
+                                data: JSON.stringify({ orderId: "<%= order.orderId %>", reason: reason }),
+                                contentType: "application/json",
+                                success: function (response) {
+                                    if (response.success) {
+                                        Swal.fire("Success!", "Your return request has been submitted.", "success");
+                                        $("#orderStatus").text("Return Requested");
+                                        modal.hide();
+                                    } else {
+                                        Swal.fire("Error", "Failed to submit return request. Please try again.", "error");
+                                    }
+                                },
+                                error: function () {
+                                    Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+
+    function cancelOrder(orderId) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Warning!',
+        text: 'Are you sure you want to cancel this order?',
+        showConfirmButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No',
+        reverseButtons: true
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        $.ajax({
+            url: '/cancelOrder',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ orderId }),
+            success: function (data) {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Order cancelled successfully',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    $(`button[onclick="cancelOrder('${orderId}')"]`).hide();
+                    $(`#orderStatus`).text("Cancelled").css("color", "red");
+                    
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: data.message || 'Failed to cancel order',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                }
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Something went wrong',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        });
+    });
+}
+
+        </script>

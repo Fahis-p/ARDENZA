@@ -1,0 +1,149 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+  .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Adds spacing between elements */
+  font-size: 16px;
+  font-weight: 500;
+}
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+  }
+
+  .card-header {
+    background-color: #487379;
+    color: white;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .order-image-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .item-count-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: red;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 2px 6px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 18px;
+    transform: translate(50%, -50%);
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+  }
+</style>
+<header class="card-header text-center mb-20">
+  <form action="/orderTab" method="get" class="d-inline">
+      <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: 230px;">
+          <input type="text" class="form-control border-0 rounded-pill" 
+                 placeholder="Search orderId..." 
+                 name="search" 
+                 value="<%= search ? search : '' %>">
+          <button class="btn border-0" type="submit">Search</button>
+      </div>
+  </form>
+</header>
+
+<main class="main">
+  <div class="page-header breadcrumb-wrap mb-3">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="#" rel="nofollow">Home</a>
+        <span class="separator">/</span>
+        <a href="#">Profile</a>
+        <span class="separator">/</span>
+        <span class="current">Orders</span>
+      </nav>
+    </div>
+  </div>
+  <section class="pt-10 pb-10">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-10 m-auto">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">Your Orders</h5>
+            </div>
+            <div class="card-body">
+              <% if (orderData && orderData.length> 0) { %>
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Products</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <%orderData.forEach((order)=>{%>
+                        <tr>
+                          <td class="image product-thumbnail">
+                            <div class="order-image-container">
+                              <img src="/uploads/re-image/<%= order.image %>" alt="Order Image"
+                                style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;" />
+
+                              <% if (order.itemCount> 1) { %>
+                                <span class="item-count-badge">+<%= order.itemCount %></span>
+                                <% } %>
+                            </div>
+                          </td>
+
+                          <td>
+                            <%=order.orderId%>
+                          </td>
+                          <td style="color: #007bff;">
+                            <%=order.status%>
+                          </td>
+                          <td>₹<%=order.finalAmount%>
+                          </td>
+                          <td>
+                            <a href="/orderDetails?orderId=<%=order.orderId%>"
+                              class="btn btn-primary btn-sm w-100 text-white shadow-sm">
+                              View Details
+                            </a>
+                          </td>
+                        </tr>
+                        <%})%>
+                    </tbody>
+                  </table>
+                </div>
+                <% } else { %>
+                  <p class="text-center">No orders found.</p>
+                  <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container mt-3">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-20" style="margin-right: 200px;">
+                <% if (totalPages > 1) { %>
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+                            <a class="page-link" href="?page=<%= i %>&search=<%= search %>"><%= i %></a>
+                        </li>
+                    <% } %>
+                <% } %>
+            </ul>
+        </nav>
+    </div>
+
+
+  </section>
+</main>
+
+<%- include("../../views/partials/user/footer") %>
