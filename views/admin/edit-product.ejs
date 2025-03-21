@@ -205,10 +205,10 @@
                 handleFileUpload(event, index);
                 const saveButton = document.querySelector(`.crop-btn[data-index="${index}"]`);
                 if (saveButton) {
-                    saveButton.innerText = 'Save'; // Reset text to "Save"
-                    saveButton.disabled = false; // Enable the button
-                    saveButton.classList.remove('btn-secondary'); // Optional: Revert button style
-                    saveButton.classList.add('btn-dark'); // Optional: Revert button style
+                    saveButton.innerText = 'Save';
+                    saveButton.disabled = false; 
+                    saveButton.classList.remove('btn-secondary'); 
+                    saveButton.classList.add('btn-dark'); 
                 }
             }
         });
@@ -276,7 +276,7 @@
                     const file = new File([blob], `cropped_image_${index}.png`, { type: 'image/png' });
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(file);
-                    inputFile.files = dataTransfer.files; // Update the file input with the cropped image
+                    inputFile.files = dataTransfer.files; 
                 }, 'image/png');
 
                 if (image) image.style.display = 'none';
@@ -288,8 +288,8 @@
                 if (button) {
                     button.innerText = 'Saved';
                     button.disabled = true;
-                    button.classList.remove('btn-dark'); // Optional: Change button style
-                    button.classList.add('btn-secondary'); // Optional: Change button style
+                    button.classList.remove('btn-dark'); 
+                    button.classList.add('btn-secondary');
                 }
             }
         }
@@ -302,7 +302,7 @@
                 if (input.files.length > 0) {
                     hiddenInputs[index].value = input.getAttribute("data-index");
                 } else {
-                    hiddenInputs[index].value = ""; // Clear the index if no file is uploaded
+                    hiddenInputs[index].value = ""; 
                 }
             });
 
