@@ -64,6 +64,11 @@ router.post("/applyCoupon",userAuth,checkoutController.applyCoupon)
 router.post("/removeCoupon",userAuth,checkoutController.removeCoupon)
 router.post("/checkout",userAuth,checkoutController.postCheckout)
 
+router.post("/validateCheckoutItems",userAuth,checkoutController.validateCheckoutItems)
+router.post("/createOrder",userAuth,checkoutController.createRazorpayOrder)
+router.post("/verifyPayment",userAuth,checkoutController.verifyPayment)
+router.post("/retryPayment",userAuth,checkoutController.retryPayment)
+
 //orderManagment
 router.get("/orderTab",userAuth,userOrderController.orderTab)
 router.get("/orderDetails",userAuth,userOrderController.orderDetails)

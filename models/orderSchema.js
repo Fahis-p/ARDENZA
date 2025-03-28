@@ -60,7 +60,13 @@ const orderSchema = new Schema({
         required: true,
         enum : ["pending","processing","shipped","delivered","cancelled","Return Requested","Returned","Rejected"]
 
-    }, 
+    },
+    paymentStatus :{
+        type : String,
+        required: true,
+        enum : ["pending","failed","paid"]
+
+    },  
     createdOn : {
         type:Date,
         default:Date.now,

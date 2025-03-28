@@ -307,9 +307,10 @@
                                 </div>
 
                                 <!-- Payment Methods -->
-                                <p>Wallet Balance: <%= walletBalance %></p>
+                                <p>Wallet Balance: <%= walletBalance %>
+                                </p>
                                 <span class="badge bg-danger ms-2">COD unavailable for orders above ₹5000</span>
-                
+
                                 <div class="checkout_payment_methods p-4 border rounded bg-white">
                                     <h6 class="mb-4">
                                         <i class="fas fa-credit-card me-2"></i>Select Payment Method
@@ -317,31 +318,32 @@
                                     <div class="payment-method">
                                         <div class="form-check mb-3">
                                             <input class="form-check-input" type="radio" name="payment_method"
-                                                value="cod" id="cod"  <% if (Number(grandTotal) > 5000) { %> disabled <% } else { %> checked <% } %> >
-                                            <label class="form-check-label d-flex align-items-center" for="cod">
-                                                <i class="fas fa-money-bill-wave me-2"></i>
-                                                <span>Cash on Delivery</span>
-                                                <span class="badge bg-success ms-2">No additional charges</span>
-                                            </label>
+                                                value="cod" id="cod" <% if (Number(grandTotal)> 5000) { %> disabled <% }
+                                                else { %> checked <% } %> >
+                                                    <label class="form-check-label d-flex align-items-center" for="cod">
+                                                        <i class="fas fa-money-bill-wave me-2"></i>
+                                                        <span>Cash on Delivery</span>
+                                                        <span class="badge bg-success ms-2">No additional charges</span>
+                                                    </label>
                                         </div>
-        
+
                                         <div class="form-check mb-3">
                                             <input class="form-check-input" type="radio" value="razorpay"
-                                                name="payment_method" id="razorpay"
-                                                <% if (Number(grandTotal) > 5000) { %> checked <% } %> >
-                                            <label class="form-check-label" for="razorpay">
-                                                <i class="fas fa-mobile-alt me-2"></i>Razorpay
-                                            </label>
+                                                name="payment_method" id="razorpay" <% if (Number(grandTotal)> 5000) {
+                                            %> checked <% } %> >
+                                                <label class="form-check-label" for="razorpay">
+                                                    <i class="fas fa-mobile-alt me-2"></i>Razorpay
+                                                </label>
                                         </div>
                                         <div class="form-check mb-3">
                                             <input class="form-check-input" type="radio" name="payment_method"
-                                                value="wallet" id="wallet" 
-                                                <% if (Number(walletBalance) < Number(grandTotal+40)) { %> disabled <% } %> >
-                                            <label class="form-check-label d-flex align-items-center" for="wallet">
-                                                <i class="fas fa-wallet me-2"></i>
-                                                <span>Wallet transaction</span>
-                                                <span class="badge bg-success ms-2">No additional charges</span>
-                                            </label>
+                                                value="wallet" id="wallet" <% if (Number(walletBalance) <
+                                                Number(grandTotal+40)) { %> disabled <% } %> >
+                                                <label class="form-check-label d-flex align-items-center" for="wallet">
+                                                    <i class="fas fa-wallet me-2"></i>
+                                                    <span>Wallet transaction</span>
+                                                    <span class="badge bg-success ms-2">No additional charges</span>
+                                                </label>
 
                                         </div>
                                     </div>
@@ -522,14 +524,17 @@
 
         async function placeOrder() {
             try {
-                
+                console.log("check point first")
+
                 const shippingAddress = document.querySelector('input[name="shipping_address"]:checked').value;
                 const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
 
                 console.log("shippingAddress:", shippingAddress)
                 console.log("paymentMethod:", paymentMethod)
+                console.log("check point one ")
 
                 const sanitizedOrderItems = sanitizeQuotes(`<%- JSON.stringify(cart.items) %>`);
+                console.log("check point two ")
                 const orderedItems = sanitizedOrderItems;
                 console.log("sanitizedOrderItems:", sanitizedOrderItems)
 
@@ -554,6 +559,8 @@
                     });
                     return;
                 }
+
+                console.log("check point three ")
 
                 if (orderedItems.includes(undefined)) {
                     Swal.fire({
@@ -589,8 +596,8 @@
                     didOpen: () => Swal.showLoading()
                 });
 
-                
 
+                console.log("check point four ")
                 if (paymentMethod === "cod" || paymentMethod === "wallet") {
                     const response = await fetch("/checkout", {
                         method: "POST",
@@ -604,6 +611,8 @@
                             discountAmount
                         })
                     });
+
+
 
                     const data = await response.json();
                     if (data.success) {
@@ -632,7 +641,6 @@
                                 window.location.replace("/cart");
                             });
                         } else {
-                            console.log("reach at here")
                             Swal.fire({
                                 title: 'Error!',
                                 text: data.error || 'Failed to place order',
@@ -641,7 +649,198 @@
                             });
                         }
                     }
-                }
+                } else if (paymentMethod === "razorpay") {
+
+                    console.log("check point five ")
+                    const validateResponse = await fetch("/validateCheckoutItems", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            orderedItems
+                        })
+                    });
+
+                    
+                    const validateData = await validateResponse.json();
+                    
+                    if (!validateData.success) {
+
+                        if (validateData.unavailableItems && validateData.unavailableItems.length > 0) {
+                            let unavailableMessage = 'The some items are no longer available:<br><ul>';
+
+                            Swal.fire({
+                                title: 'Products Unavailable',
+                                html: unavailableMessage,
+                                icon: 'error',
+                                confirmButtonText: 'UPDATE CART'
+                            }).then(() => {
+                                window.location.replace("/cart");
+                            });
+                            return;
+                        }
+                    }
+
+                    
+                    const orderResponse = await fetch("/createOrder", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            amount: totalAmount,
+                            currency: "INR"
+                        })
+                    });
+                    
+
+                    const orderData = await orderResponse.json();
+                    if (!orderData.success) {
+                        throw new Error("Failed to create Razorpay order");
+                    }
+
+                    console.log("orderData:", orderData)
+
+                    const options = {
+                        key: orderData.key,
+                        amount: orderData.amount,
+                        currency: orderData.currency,
+                        name: "Ardenza",
+                        description: "Perfume Purchase",
+                        order_id: orderData.order_id,
+                        handler: async function (response) {
+                            try {
+                                const verifyResponse = await fetch("/verifyPayment", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_signature: response.razorpay_signature,
+                                        shippingAddress,
+                                        orderedItems,
+                                        totalAmount,
+                                        couponCode: appliedCouponCode,
+                                        discountAmount,
+                                        paymentMethod: "razorpay"
+                                    })
+                                });
+
+                                const verifyData = await verifyResponse.json();
+
+                                if (verifyData.success) {
+                                    await Swal.fire({
+                                        title: 'Payment Successful!',
+                                        text: 'Your order has been placed successfully!',
+                                        icon: 'success',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
+
+
+                                    window.location.href = `/orderDetails?orderId=${verifyData.orderId}`;
+
+                                }
+                                else {
+                                    if (verifyData.unavailableItems && verifyData.unavailableItems.length > 0) {
+                                        let unavailableMessage = 'Payment successful but some items became unavailable:<br><ul>';
+                                        verifyData.unavailableItems.forEach(item => {
+
+                                            unavailableMessage += `<li>${item.name}: ${item.reason}</li>`;
+                                        });
+                                        unavailableMessage += '</ul><br>Your payment will be refunded.';
+
+                                        Swal.fire({
+                                            title: 'Products Unavailable',
+                                            html: unavailableMessage,
+                                            icon: 'warning',
+                                            confirmButtonText: 'OK'
+                                        }).then(() => {
+                                            window.location.replace("/cart");
+                                        });
+                                        return;
+                                    }
+
+                                    throw new Error(verifyData.message || 'Payment verification failed');
+                                }
+                            } catch (error) {
+                                console.error("Payment verification error:", error);
+                                Swal.fire({
+                                    title: 'Payment Failed!',
+                                    text: error.message || 'Payment verification failed. Please contact support.',
+                                    icon: 'error'
+                                });
+
+                            }
+                        },
+
+                        modal: {
+                            ondismiss: async function () {
+                                try {
+
+                                    const response = await fetch("/verifyPayment", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: orderData.order_id,
+                                            shippingAddress,
+                                            orderedItems,
+                                            totalAmount,
+                                            couponCode: appliedCouponCode,
+                                            discountAmount,
+                                            paymentMethod: "razorpay",
+                                            paymentStatus: "failed",
+                                            orderStatus: "pending"
+                                        })
+                                    });
+                                    const failedResponse = await response.json();
+                                    if (failedResponse.orderId) {
+                                        await Swal.fire({
+                                            title: 'Payment Cancelled',
+                                            text: 'Your payment was cancelled',
+                                            icon: 'warning',
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                        window.location.href = `/orderDetails?orderId=${failedResponse.orderId}`;
+                                    }
+                                } catch (error) {
+                                    if (failedResponse.orderId) {
+                                        await Swal.fire({
+                                            title: 'Payment Cancelled',
+                                            text: 'Your payment was cancelled',
+                                            icon: 'warning',
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                        window.location.href = /paymentFailed/`${failedResponse.orderId}`;
+                                    }
+                                    console.error("Failed to handle payment cancellation:", error);
+                                    Swal.fire({
+                                        title: 'Error',
+                                        text: 'Something went wrong while cancelling the payment',
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                            }
+                        },
+                        prefill: {
+                            name: 'fahis',
+                            email: 'fahis$@gmail.com',
+                            contact: '9072897122'
+                        },
+                        theme: { color: "#3399cc" }
+
+
+
+
+                    }
+
+
+
+                    const razorpay = new Razorpay(options);
+                    razorpay.open();
+                };
+
+
             } catch (error) {
                 console.error('Error:', error);
                 await Swal.fire({

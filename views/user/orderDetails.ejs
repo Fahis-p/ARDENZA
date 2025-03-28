@@ -109,17 +109,30 @@
             <p><strong>Status:</strong> <span id="orderStatus">
                     <%= order.status %>
                 </span></p>
+            <p><strong>Payment status:</strong> <span id="orderStatus">
+                    <%= order.paymentStatus %>
+                </span></p>
             <% if(order.status==='delivered' ) { %>
                 <button id="returnOrderBtn" class="btn btn-danger">Return Order</button>
                 <% } %>
-                    <% if ( order.status !=='delivered' && order.status !=='cancelled' && order.status
-                        !=='Return Requested' && order.status !=='Returned' && order.status !=='Rejected' && order.status !=='shipped' ) { %>
-                        <button class="btn btn-danger btn-sm px-3 shadow-sm rounded-pill"
-                            style="white-space: nowrap; margin-left: -5px;"
-                            onclick="cancelOrder('<%= order.orderId %>')">
-                            <i class="fas fa-times-circle me-1"></i> Cancel Order
-                        </button>
+
+                    <% if (order.paymentStatus==='failed' && order.status==='pending' ) { %>
+                        <p class="text-start">
+                            <a href="#" class="btn btn-danger btn-sm text-white shadow-sm"
+                                onclick="retryPayment(event, `<%= order.finalAmount || 0 %>`,`<%= order.orderId %>`)">
+                                Retry Payment
+                            </a>
+                        </p>
                         <% } %>
+                            <% if ( order.status !=='delivered' && order.status !=='cancelled' && order.status
+                                !=='Return Requested' && order.status !=='Returned' && order.status !=='Rejected' &&
+                                order.status !=='shipped' ) { %>
+                                <button class="btn btn-danger btn-sm px-3 shadow-sm rounded-pill"
+                                    style="white-space: nowrap; margin-left: -5px;"
+                                    onclick="cancelOrder('<%= order.orderId %>')">
+                                    <i class="fas fa-times-circle me-1"></i> Cancel Order
+                                </button>
+                                <% } %>
         </section>
 
         <section class="shipping-address">
@@ -207,6 +220,7 @@
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
         <script>
             $(document).ready(function () {
                 var modal = $("#returnOrderModal");
@@ -268,59 +282,164 @@
                 });
             });
 
-    function cancelOrder(orderId) {
-    Swal.fire({
-        icon: 'warning',
-        title: 'Warning!',
-        text: 'Are you sure you want to cancel this order?',
-        showConfirmButton: true,
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
-        reverseButtons: true
-    }).then((result) => {
-        if (!result.isConfirmed) {
-            return;
-        }
-
-        $.ajax({
-            url: '/cancelOrder',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ orderId }),
-            success: function (data) {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Order cancelled successfully',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    $(`button[onclick="cancelOrder('${orderId}')"]`).hide();
-                    $(`#orderStatus`).text("Cancelled").css("color", "red");
-                    
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: data.message || 'Failed to cancel order',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                }
-            },
-            error: function () {
+            function cancelOrder(orderId) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: 'Something went wrong',
-                    showConfirmButton: false,
-                    timer: 1500
+                    icon: 'warning',
+                    title: 'Warning!',
+                    text: 'Are you sure you want to cancel this order?',
+                    showConfirmButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+
+                    $.ajax({
+                        url: '/cancelOrder',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ orderId }),
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Order cancelled successfully',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                $(`button[onclick="cancelOrder('${orderId}')"]`).hide();
+                                $(`#orderStatus`).text("Cancelled").css("color", "red");
+
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: data.message || 'Failed to cancel order',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Something went wrong',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                        }
+                    });
                 });
             }
-        });
-    });
-}
+
+
+            function retryPayment(event, finalAmount, orderId) {
+                event.preventDefault(); // Prevent page reload
+
+                Swal.fire({
+                    title: "Retry Payment?",
+                    text: "Do you want to attempt the payment again?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, Retry",
+                    cancelButtonText: "Cancel",
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch("/createOrder", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ amount: finalAmount, currency: "INR" }) // Sending currency
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+
+                                    const options = {
+                                        key: data.key,
+                                        amount: data.amount,
+                                        currency: data.currency,
+                                        order_id: data.order_id,
+                                        name: "Ardenza",
+                                        description: "Retrying Payment",
+                                        handler: async function (response) {
+
+                                            try {
+
+                                                const retryResponse = await fetch("/retryPayment", {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({
+                                                        razorpay_payment_id: response.razorpay_payment_id,
+                                                        razorpay_order_id: response.razorpay_order_id,
+                                                        razorpay_signature: response.razorpay_signature,
+                                                        orderId: orderId
+
+                                                    })
+                                                });
+                                                const verifyData = await retryResponse.json();
+
+                                                if (verifyData.success) {
+                                                    await Swal.fire({
+                                                        title: 'Payment Successful!',
+                                                        text: 'Your order has been placed successfully!',
+                                                        icon: 'success',
+                                                        timer: 1500,
+                                                        showConfirmButton: false
+                                                    });
+
+                                                    window.location.reload();
+                                                }
+
+
+                                            } catch (error) {
+                                                console.error("Payment verification error:", error);
+                                                Swal.fire({
+                                                    title: 'Payment Failed!',
+                                                    text: error.message || 'Payment verification failed. Please contact support.',
+                                                    icon: 'error'
+                                                });
+
+                                            }
+                                        },
+                                        modal: {
+                                            ondismiss: async function () {
+                                                try {
+                                                    Swal.fire({
+                                                        title: "Payment Cancelled",
+                                                        text: "You have cancelled the payment. Please try again.",
+                                                        icon: "warning",
+                                                        confirmButtonText: "OK",
+                                                        confirmButtonColor: "#d33"
+                                                    }).then(() => {
+                                                        window.location.reload(); // Reload the page after closing the alert
+                                                    });
+                                                } catch (error) {
+                                                    console.error("Error handling modal dismissal:", error);
+                                                }
+                                            }
+                                        }
+                                    };
+                                    const rzp = new Razorpay(options);
+                                    rzp.open();
+                                } else {
+                                    Swal.fire("Error", "Failed to create a new payment order. Please try again.", "error");
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Error:", error);
+                                Swal.fire("Error", "Something went wrong. Try again later.", "error");
+                            });
+                    }
+                });
+            }
+
+
 
         </script>

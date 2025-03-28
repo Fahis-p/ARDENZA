@@ -102,8 +102,8 @@
                       <th class="text-center"></th>
                       <th>Name</th>
                       <th>Description</th>
-                      <!-- <th>Offer Price</th>
-                    <th>Offer</th> -->
+                      <th>Offer Price</th>
+                    <th>Offer</th> 
                       <th>Status</th>
                       <th>List/Unlist</th>
                       <th class="text-start">Edit</th>
@@ -119,16 +119,27 @@
                         <td class="text-start">
                           <%=category.description%>
                         </td>
-                        <!-- <td>
-                    </td>
+                        <td>
+                          <%if (category.categoryOffer) {%>
+                              <%=category.categoryOffer%>%
+                                  <%}else{%>
+                                      0%
+                                      <%}%>
+                      </td>
                     <td class="text-start">
-                      <button class="btn btn-info" style="width: 100px">
-                        <a href="#" class="text-white">Add Offer</a>
-                      </button>
-                      <button class="btn btn-info"style="width: 100px">
-                        <a href="#" class="text-white">Remove</a>
-                      </button>
-                    </td> -->
+                      <%if (category.categoryOffer===0){%>
+                          <button class="btn btn-info" style="width: 100px">
+                              <a href="#" class="text-white"
+                                  onclick="addoffer('<%=category._id%>')">Add Offer</a>
+                          </button>
+                          <%}else{%>
+                              <button class="btn btn-info" style="width: 100px">
+                                  <a href="#" class="text-white"
+                                      onclick="removeoffer('<%=category._id%>')">Remove</a>
+                              </button>
+                              <%}%>
+                  </td>
+
                         <td class="text-start">
                           <%if(category.isListed){%>
                             <span class="badge rounded-pill alert-success" style="width: 60px">Listed</span>
@@ -260,6 +271,88 @@
           element.style.display = "none"
         })
       }
+
+      async function addoffer(categoryId) {
+                const { value: amount } = await Swal.fire({
+                    title: "Offer in percentage",
+                    input: "number",
+                    inputLabel: "percentage",
+                    inputPlaceholder: "%",
+                })
+                if (amount) {
+                    try {
+                        const response = await fetch("/admin/addCategoryOffer", {
+                            method: 'POST',
+                            headers: {
+                                'content-type': "application/json"
+                            },
+                            body: JSON.stringify({
+                                percentage: amount,
+                                categoryId: categoryId,
+                            }),
+                        })
+                        const data = await response.json();
+                        if (response.ok && data.status === true) {
+                            Swal.fire(
+                                "Offer Added",
+                                "The Offer has been added",
+                                "success",
+                            ).then(() => {
+                                location.reload();
+                            })
+                        } else {
+                            Swal.fire("Failed", data.message || "Adding Offer failed", "error")
+                        }
+                    } catch (error) {
+                        Swal.fire(
+                            "Error",
+                            "An Error occured while adding the offer",
+                            "error",
+                        )
+                        console.log("Error adding Offer", error);
+                    }
+                }
+            }
+
+            async function removeoffer(categoryId) {
+                try {
+
+                  console.log("remove section")
+
+                    const response = await fetch("/admin/removeCategoryOffer", {
+                        method: "POST",
+                        headers: {
+                            "content-type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            categoryId: categoryId,
+                        })
+                    })
+                    const data = await response.json();
+
+                    if (response.ok && data.status === true) {
+                        Swal.fire(
+                            "Offer removed",
+                            "The offer has been removed",
+                            "success",
+                        ).then(() => {
+                            location.reload();
+                        })
+                    } else {
+                        Swal.fire("Failed", data.message || "Removing Offer failed", "error");
+                    }
+                } catch (error) {
+                    Swal.fire(
+                        "Error",
+                        "An error occured while removing offer",
+                        "error",
+                    );
+                    console.log("Error removing Offer", error);
+                }
+            }
+
+
+
 
     </script>
     <%- include("../../views/partials/admin/footer") %>

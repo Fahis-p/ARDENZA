@@ -449,6 +449,13 @@ const resendOtp = async (req, res) => {
 const loadLogin = async (req, res) => {
     try {
         if (!req.session.user) {
+
+            // req.session.user = {
+            //     _id: '67ac19f158f92942fd83daf1'
+            // };
+
+            // res.redirect("http://localhost:3000/checkout?userId=67ac19f158f92942fd83daf1")
+
             return res.render("login")
         } else {
             res.redirect("/")

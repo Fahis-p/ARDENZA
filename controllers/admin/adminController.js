@@ -1,6 +1,8 @@
 const User = require("../../models/userSchema")
 const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
+const Order = require("../../models/orderSchema")
+
 
 
 const pageerror = async (req,res)=>{
@@ -42,7 +44,18 @@ const login = async (req,res)=>{
 const loadDashboard = async (req,res)=>{
     if(req.session.admin){
         try {
-            res.render("dashboard")
+
+           
+
+            
+            res.render("dashboard",{
+            totalSales: 0,
+            totalDiscounts: 0,
+            totalOrders: 0,
+            topProducts:{}
+
+
+            })
 
         } catch (error) {
             res.redirect("/pageerror")
@@ -68,6 +81,9 @@ const logout = async(req,res)=>{
         res.redirect("/pageerror")
     }
 }
+
+
+
 
 module.exports = {
     loadLogin,

@@ -44,7 +44,8 @@ const orderTab = async (req, res) => {
                 orderId: items.orderId,
                 finalAmount: items.finalAmount,
                 status: items.status,
-                itemCount: items.orderedItems.length
+                itemCount: items.orderedItems.length,
+                paymentStatus: items.paymentStatus
 
             }
         })
@@ -157,7 +158,7 @@ const userCancelOrder = async (req, res) => {
         if (order.status === 'cancelled') {
             return res.status(400).json({ success: false, message: "Order is already cancelled" });
         }
-        if (order.PaymentMethod !== 'cod') {
+        if (order.PaymentMethod !== 'cod' && order.paymentStatus !== 'failed') {
             const wallet = await Wallet.findOne({ userId: order.userId });
             if (!wallet) {
                 // Create a new wallet and add the order amount

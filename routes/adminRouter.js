@@ -7,6 +7,7 @@ const brandController = require("../controllers/admin/brandController")
 const productController = require("../controllers/admin/productController")
 const couponController = require("../controllers/admin/couponController")
 const adOrderController = require("../controllers/admin/adOrderController")
+const dashboardController = require("../controllers/admin/dashboardController")
 const {userAuth,adminAuth}= require("../middlewares/auth")
 const multer = require("multer")
 const storage = require("../helpers/multer")
@@ -30,6 +31,8 @@ router.get("/listCategory",adminAuth,categoryController.getListCategory)
 router.get("/unlistCategory",adminAuth,categoryController.getUnListCategory)
 router.get("/editCategory",adminAuth,categoryController.getEditCategory)
 router.post("/editcategory/:id",adminAuth,categoryController.editCategory)
+router.post("/addCategoryOffer",adminAuth,categoryController.addCategoryOffer)
+router.post("/removeCategoryOffer",adminAuth,categoryController.removeCategoryOffer)
 
 //Brand managment
 router.get("/brands",adminAuth,brandController.getBrandPage)
@@ -54,6 +57,9 @@ router.get("/unBlockProduct",adminAuth,productController.unblockProduct)
 router.get("/editProduct",adminAuth,productController.getEditProduct)
 router.post("/editProduct/:id",uploads.array("images",4),productController.editProduct)
 router.post("/deleteImage",adminAuth,productController.deleteSingleImage)
+router.post("/addProductOffer",adminAuth,productController.addProductOffer)
+router.post("/removeProductOffer",adminAuth,productController.removeProductOffer)
+
 
 //Order Managment
 
@@ -62,6 +68,12 @@ router.post("/updateOrder",adminAuth,adOrderController.updateOrder)
 router.post("/cancelOrder",adminAuth,adOrderController.cancelOrder)
 router.post("/approveReturn",adminAuth,adOrderController.approveReturn)
 router.post("/rejectReturn/:orderId",adminAuth,adOrderController.rejectReturn)
+
+//Dashboard Management
+
+router.get("/salesReport",adminAuth,dashboardController.salesReport)
+router.get('/salesReport/pdf',adminAuth,dashboardController.salesReportPdf)
+router.get('/salesReport/excel',adminAuth,dashboardController.salesReportExcel)
 
 
 module.exports = router

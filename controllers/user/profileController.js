@@ -212,7 +212,11 @@ const userProfile = async (req,res)=>{
         const userData = await User.findById(userId);
         const addressData = await Address.findOne({userId : userId})
 
-        const walletData = await Wallet.findOne({userId:userId})
+        const walletData = await Wallet.findOne({userId:userId}).lean();
+        if (walletData && walletData.transactions) {
+            // Sort transactions in descending order (latest first)
+            walletData.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
 
 
 

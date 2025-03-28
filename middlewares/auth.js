@@ -24,7 +24,9 @@ const adminAuth = (req, res, next) => {
     if (req.session && req.session.admin) {  
         next();
     } else {
-        
+
+        // req.session.admin= true;
+        //  next()
         res.redirect("/admin/login");
     }
 };

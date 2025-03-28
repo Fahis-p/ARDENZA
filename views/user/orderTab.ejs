@@ -104,9 +104,9 @@
                           <td>
                             <%=order.orderId%>
                           </td>
-                          <td style="color: #007bff;">
-                            <%=order.status%>
-                          </td>
+                          <td class="<%= order.status === 'pending' ? 'text-danger' : 'text-primary' %>">
+                            <%= order.status %>
+                        </td>
                           <td>₹<%=order.finalAmount%>
                           </td>
                           <td>
@@ -115,6 +115,14 @@
                               View Details
                             </a>
                           </td>
+                          <% if (order.paymentStatus === 'failed' && order.status === 'pending' ){%>
+                          <td>
+                            <a href="#"
+                              class="btn btn-danger btn-sm w-100 text-white shadow-sm">
+                              Retry payment
+                            </a>
+                          </td>
+                          <%}%>
                         </tr>
                         <%})%>
                     </tbody>

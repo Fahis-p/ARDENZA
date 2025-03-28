@@ -1,5 +1,6 @@
 const { parse } = require("dotenv")
 const Category = require("../../models/categorySchema")
+const Product = require("../../models/productSchema")
 
 const categoryInfo = async (req, res) => {
     try {
@@ -120,6 +121,79 @@ const editCategory = async (req, res) => {
     }
 }
 
+const addCategoryOffer = async (req, res) => {
+    try {
+
+       
+
+        const percentage = parseInt(req.body.percentage);
+        const categoryId = req.body.categoryId;
+        const category = await Category.findById(categoryId);
+
+        console.log("check here add cat")
+
+        if (!category) {
+            return res.status(404).json({ status: "false", message: "Category not found" });
+        }
+
+        console.log("check here add cat2")
+
+        const products = await Product.find({ category: category._id });
+        console.log(products)
+        const hasProductOffer = products.some((product) => product.productOffer > percentage);
+        console.log("check here add cat3")
+        if (hasProductOffer) {
+            return res.json({ status: false, message: "Product with this category already have product offer" })
+        }
+
+        await Category.updateOne({ _id: categoryId }, { $set: { categoryOffer: percentage } })
+
+        for (const product of products) {
+            product.productOffer = percentage;
+            const discountAmount = Math.floor(product.regularPrice * (percentage / 100));
+            product.salePrice = product.regularPrice - discountAmount;
+            await product.save();
+        }
+
+        res.json({ status: true })
+
+    } catch (error) {
+        res.status(500).json({ status: false, message: "Internal server error" })
+    }
+}
+
+
+const removeCategoryOffer = async (req, res) => {
+    try {
+
+        console.log("remove at back")
+
+        const categoryId = req.body.categoryId;
+        const category = await Category.findById(categoryId);
+
+        if (!category) {
+            return res.status(400).json({ status: false, message: "Category not found" });
+        }
+
+        const percentage = category.categoryOffer;
+        const products = await Product.find({ category: category._id })
+
+        for (const product of products) {
+            product.salePrice = product.regularPrice;
+            product.productOffer = 0;
+            await product.save();
+        }
+
+        category.categoryOffer = 0;
+        await category.save();
+
+        res.json({ status: true, message: "Offer removed successfully" });
+
+    } catch (error) {
+        res.status(500).json({ status: false, message: "Intenal server error" })
+    }
+}
+
 
 
 
@@ -129,6 +203,8 @@ module.exports = {
     getListCategory,
     getUnListCategory,
     getEditCategory,
-    editCategory
+    editCategory,
+    addCategoryOffer,
+    removeCategoryOffer
 
 }

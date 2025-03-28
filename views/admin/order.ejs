@@ -409,7 +409,7 @@ button:hover {
                             </td>
                             <td>
                                 <select class="status-select" onchange="updateOrderStatus('<%= order._id %>', this)"
-                                    <%= order.status === 'cancelled' || order.status === 'delivered' || order.status === 'Return Requested' || order.status === 'Returned' || order.status === 'Rejected' ? 'disabled' : '' %>>
+                                    <%= order.status === 'cancelled' || order.status === 'pending' || order.status === 'delivered' || order.status === 'Return Requested' || order.status === 'Returned' || order.status === 'Rejected' ? 'disabled' : '' %>>
                                     <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
                                     <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>                                   
                                     <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
