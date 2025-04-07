@@ -171,8 +171,10 @@
                         <th>Product Name</th>
                         <th>Product</th>
                         <th>Quantity</th>
+                        <th>Item status</th>
                         <th>Price</th>
                         <th>Total</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -188,10 +190,32 @@
                             <td>
                                 <%= product.quantity %> items
                             </td>
+                            <td id="itemStatus<%= product._id %>"
+                                class="<%= product.itemStatus === 'processing' ? 'text-warning' : 'text-danger' %>">
+                                <%= product.itemStatus %>
+                            </td>
                             <td>₹<%= product.price %>
                             </td>
                             <td>₹<%= product.quantity * product.price %>
                             </td>
+                            <% if ( product.itemStatus !=='delivered' && product.itemStatus !=='cancelled' &&
+                                product.itemStatus !=='Return Requested' && product.itemStatus !=='Returned' &&
+                                product.itemStatus !=='Rejected' && product.itemStatus !=='shipped' && !cancelItems ) {
+                                %>
+                                <td> <button class="btn btn-danger btn-sm px-3 shadow-sm rounded-pill"
+                                        style="white-space: nowrap; margin-left: -5px;"
+                                        onclick="cancelItem('<%= order.orderId %>','<%= product._id %>')">
+                                        <i class="fas fa-times-circle me-1"></i> Cancel Item
+                                    </button> </td>
+                                <%} else if (product.itemStatus==="delivered" ){%>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm px-3 shadow-sm rounded-pill"
+                                            style="white-space: nowrap; margin-left: -5px;"
+                                            onclick="returnItem('<%= order.orderId %>', '<%= product._id %>')">
+                                            <i class="fas fa-undo-alt me-1"></i> Return Item
+                                        </button>
+                                    </td>
+                                    <%}%>
                         </tr>
                         <% }) %>
                 </tbody>
@@ -216,6 +240,23 @@
         </div>
     </div>
 
+    <!-- Single Item Return Modal -->
+    <div id="itemReturnModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="item-return-close">&times;</span>
+            <h3>Return Item</h3>
+            <label for="itemReturnReason">Reason for Return:</label>
+            <textarea id="itemReturnReason" rows="3" style="width: 100%;"
+                placeholder="Enter reason for return..."></textarea>
+            <br><br>
+            <button id="submitItemReturn" class="btn btn-warning">Submit</button>
+
+            <!-- Hidden Fields -->
+            <input type="hidden" id="itemReturnOrderId" />
+            <input type="hidden" id="itemReturnProductId" />
+        </div>
+    </div>
+
     <%- include("../../views/partials/user/footer") %>
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -226,6 +267,8 @@
                 var modal = $("#returnOrderModal");
                 var btn = $("#returnOrderBtn");
                 var closeBtn = $(".close");
+                const itemModal = $("#itemReturnModal");
+                const itemCloseBtn = $(".item-return-close");
 
                 btn.on("click", function () {
                     document.getElementById("returnOrderModal").style.display = "flex";
@@ -239,6 +282,27 @@
                 $(window).on("click", function (event) {
                     if (event.target == modal[0]) {
                         modal.hide();
+                    }
+                });
+
+
+                function returnItem(orderId, itemId) {
+                    console.log("yes return item")
+                    $("#itemReturnOrderId").val(orderId);
+                    $("#itemReturnProductId").val(itemId);
+                    $("#itemReturnReason").val("");
+                    itemModal.css("display", "flex").show();
+                }
+
+                window.returnItem = returnItem
+
+                itemCloseBtn.on("click", function () {
+                    itemModal.hide();
+                });
+
+                $(window).on("click", function (event) {
+                    if (event.target === itemModal[0]) {
+                        itemModal.hide();
                     }
                 });
 
@@ -280,6 +344,51 @@
                         }
                     });
                 });
+
+                // Submit single item return
+                $("#submitItemReturn").on("click", function () {
+                    const reason = $("#itemReturnReason").val().trim();
+                    const orderId = $("#itemReturnOrderId").val();
+                    const itemId = $("#itemReturnProductId").val();
+
+                    if (!reason) {
+                        Swal.fire("Error", "Please provide a reason for return.", "error");
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: "Are you sure?",
+                        text: "Do you want to return this item?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#d33",
+                        cancelButtonColor: "#3085d6",
+                        confirmButtonText: "Yes, return it!"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: "/returnItemOrder",
+                                method: "POST",
+                                contentType: "application/json",
+                                data: JSON.stringify({ orderId, itemId, reason }),
+                                success: function (response) {
+                                    if (response.success) {
+                                        Swal.fire("Success!", "Return request submitted.", "success");
+                                        $(`#itemStatus${itemId}`).text("Return Requested").css("color", "orange");
+                                        itemModal.hide();
+                                    } else {
+                                        Swal.fire("Error", response.message || "Failed to submit return.", "error");
+                                    }
+                                },
+                                error: function () {
+                                    Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                                }
+                            });
+                        }
+                    });
+                });
+
+
             });
 
             function cancelOrder(orderId) {
@@ -337,9 +446,64 @@
                 });
             }
 
+            function cancelItem(orderId, itemId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning!',
+                    text: 'Are you sure you want to cancel this item?',
+                    showConfirmButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+
+                    $.ajax({
+                        url: '/cancelItemOrder',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ orderId, itemId }),
+                        success: function (data) {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Item Order cancelled successfully',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                $(`button[onclick="cancelOrder('${orderId}')"]`).hide();
+                                $(`#itemStatus${itemId}`).text("Cancelled").css("color", "red");
+
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: data.message || 'Failed to cancel item',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Something went wrong',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                        }
+                    });
+                });
+            }
+
 
             function retryPayment(event, finalAmount, orderId) {
-                event.preventDefault(); // Prevent page reload
+                event.preventDefault();
 
                 Swal.fire({
                     title: "Retry Payment?",
@@ -355,7 +519,7 @@
                         fetch("/createOrder", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ amount: finalAmount, currency: "INR" }) // Sending currency
+                            body: JSON.stringify({ amount: finalAmount, currency: "INR" })
                         })
                             .then(res => res.json())
                             .then(data => {
@@ -418,7 +582,7 @@
                                                         confirmButtonText: "OK",
                                                         confirmButtonColor: "#d33"
                                                     }).then(() => {
-                                                        window.location.reload(); // Reload the page after closing the alert
+                                                        window.location.reload();
                                                     });
                                                 } catch (error) {
                                                     console.error("Error handling modal dismissal:", error);

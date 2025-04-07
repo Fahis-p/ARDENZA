@@ -77,7 +77,7 @@ const removeFromWishlist =  async (req, res) => {
 
         wishlist.products = wishlist.products.filter(product => product.productId.toString() !== productId);
 
-        // Save the updated wishlist
+        
         await wishlist.save();
 
         res.status(200).json({ message: "Product removed from wishlist" });

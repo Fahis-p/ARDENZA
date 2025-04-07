@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zxx">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="description" content="Male_Fashion Template" />
@@ -7,7 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Ardenza</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet" />
     <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
     <link rel="stylesheet" href="css/elegant-icons.css" type="text/css" />
@@ -19,18 +21,21 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
-        body, html {
+        body,
+        html {
             height: 100%;
             margin: 0;
             font-family: "Nunito Sans", sans-serif;
             overflow: hidden;
         }
+
         .container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100%;
         }
+
         .login_wrap {
             width: 100%;
             max-width: 400px;
@@ -39,6 +44,7 @@
             background: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+
         .heading_s1 h3 {
             margin: 0;
             font-size: 24px;
@@ -47,9 +53,11 @@
             text-align: center;
             margin-bottom: 30px;
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         .otp-timer {
             display: inline-block;
             margin-left: 10px;
@@ -64,6 +72,7 @@
             border: 2px solid #ddd;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
         #timerValue {
             display: block;
             font-size: 24px;
@@ -71,10 +80,12 @@
             color: #333;
             line-height: 60px;
         }
+
         #timerValue.expired {
             font-size: 14px;
             color: red;
         }
+
         .btn-primary {
             background-color: #007bff;
             border: none;
@@ -82,9 +93,11 @@
             margin-top: 10px;
             display: block;
         }
+
         .btn-primary:hover {
             background-color: #0056b3;
         }
+
         .btn-secondary {
             width: 100%;
             background-color: #6c757d;
@@ -92,173 +105,301 @@
             margin-top: 10px;
             display: block;
         }
+
         .btn-secondary:hover {
             background-color: #5a6268;
         }
+
         .alert-danger {
             margin-top: 15px;
             text-align: center;
         }
+
         .text-center {
             text-align: center;
             margin-top: 15px;
         }
+
         .text-muted {
             color: #6c757d;
             text-align: center;
         }
+
         .pt-25 {
             padding-top: 25px;
         }
     </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="login_wrap">
-        <div class="padding_eight_all bg-white">
-            <div class="heading_s1">
-                <h3>Email Verification Page</h3>
-            </div>
-            <form id="otpForm" action="" method="post" onsubmit="return validateOTPForm()">
-                <div class="form-group">
-                    <label for="otp">Enter OTP:</label>
-                    <input type="text" id="otp" name="otp" class="form-control" required maxlength="6" pattern="\d*" />
+    <div class="container">
+        <div class="login_wrap">
+            <div class="padding_eight_all bg-white">
+                <div class="heading_s1">
+                    <h3>Email Verification Page</h3>
                 </div>
-                <button type="submit" class="btn btn-primary">Verify Email</button>
-                <div class="form-group text-center">
-                    <div id="otpTimer" class="otp-timer">
-                        <span id="timerValue">60</span>
+                <form id="otpForm" action="" method="post" onsubmit="return validateOTPForm()">
+                    <div class="form-group">
+                        <label for="otp">Enter OTP:</label>
+                        <input type="text" id="otp" name="otp" class="form-control" required maxlength="6"
+                            pattern="\d*" />
                     </div>
-                    <button type="button" id="resendBtn" class="btn btn-secondary" onClick="resendOTP()" disabled>Resend OTP</button>
+                    <button type="submit" class="btn btn-primary">Verify Email</button>
+                    <div class="form-group text-center">
+                        <div id="otpTimer" class="otp-timer">
+                            <span id="timerValue">60</span>
+                        </div>
+                        <button type="button" id="resendBtn" class="btn btn-secondary" onClick="resendOTP()"
+                            disabled>Resend OTP</button>
+                    </div>
+                    <% if (locals.message && message.length> 0) { %>
+                        <div class="alert alert-danger">
+                            <%= message %>
+                        </div>
+                        <% } %>
+                </form>
+                <meta id="timerMeta" data-timer="<%= timer %>">
+                <meta id="resendTimerMeta" data-resend-timer="<%= otpExpiresAt || 0 %>">
+                <div class="text-muted text-center pt-25">
+                    Already verified? <a href="/login">Login now</a>
                 </div>
-                <% if (locals.message && message.length > 0) { %>
-                <div class="alert alert-danger"><%= message %></div>
-                <% } %>
-            </form>
-            <meta id="timerMeta" data-timer="<%= timer %>">
-            <meta id="resendTimerMeta" data-resend-timer="<%= otpExpiresAt || 0 %>">
-            <div class="text-muted text-center pt-25">
-                Already verified? <a href="/login">Login now</a>
             </div>
         </div>
     </div>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    document.getElementById("otp").focus();
-    let createdTime = document.getElementById("timerMeta").getAttribute("data-timer")
-    let currentTime = Date.now()
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.getElementById("otp").focus();
+        let createdTime = document.getElementById("timerMeta").getAttribute("data-timer")
+        let currentTime = Date.now()
 
-    let timer = Math.max(0, Math.floor(( createdTime - currentTime) / 1000))
-    let timerInterval;
+        let timer = Math.max(0, Math.floor((createdTime - currentTime) / 1000))
+        let timerInterval;
 
-    let resendBtn = document.getElementById("resendBtn"); // Select the Resend OTP button
-    resendBtn.disabled = timer > 0; // Disable the button if timer is running
+        let resendBtn = document.getElementById("resendBtn");
+        resendBtn.disabled = timer > 0;
 
-    function startTimer() {
-        timerInterval = setInterval(() => {
-            timer--;
-            document.getElementById("timerValue").textContent = timer;
-            if (timer <= 0) {
-                clearInterval(timerInterval);
-                document.getElementById("timerValue").classList.add("expired");
-                document.getElementById("timerValue").textContent = "Expired";
-                document.getElementById("otp").disabled = true;
-                resendBtn.disabled = false;
-            }
-        }, 1000);
-    }
-    startTimer();
-
-    function validateOTPForm(){
-        const otpInput = document.getElementById("otp").value
-        $.ajax({
-            type:"POST",
-            url:"verify_otp",
-            data:{otp:otpInput}, 
-            success: function(response){
-                if(response.success){
-                    Swal.fire({
-                        icon:"success",
-                        title:"otp Verified Successfully",
-                        showConfirmButton:false,
-                        timer:1500,
-
-
-                    }).then(()=>{
-                        window.location.href = response.redirectUrl
-                    })
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById("timerValue").textContent = timer;
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById("timerValue").classList.add("expired");
+                    document.getElementById("timerValue").textContent = "Expired";
+                    document.getElementById("otp").disabled = true;
+                    resendBtn.disabled = false;
                 }
-                else{
-                    Swal.fire({
-                        icon:"error",
-                        title:"Error",
-                        text:response.message
-                    })
+            }, 1000);
+        }
+        startTimer();
 
-                }
-            },
-            error: function (){
+        function validateOTPForm() {
+            const otpInput = document.getElementById("otp").value
+            $.ajax({
+                type: "POST",
+                url: "verify_otp",
+                data: { otp: otpInput },
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "otp Verified Successfully",
+                            showConfirmButton: false,
+                            timer: 1500,
+
+
+                        }).then(() => {
+                            document.body.innerHTML = `
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        .wrapper {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+    </style>
+
+    <div class="wrapper">
+        <h2>Enter Your Referral Code</h2>
+        <input type="text" id="referralCode" class="input-field" placeholder="Enter Referral Code">
+        <button class="btn" id="submitBtn">Continue</button>
+        <button class="btn" id="noReferralBtn">Continue Without Referral</button>
+    </div>
+`;
+
+                            const script = document.createElement("script");
+                            script.innerHTML = `
+    document.getElementById("submitBtn").addEventListener("click", function() {
+        const code = document.getElementById("referralCode").value.trim();
+        
+        if (code === "") {
+            Swal.fire({
+                icon: "warning",
+                title: "Referral Code Required",
+                text: "Please enter a referral code."
+            });
+            return;
+        }
+
+        // Send the referral code to the backend using Fetch API
+        fetch("/verifyReferral", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
                 Swal.fire({
-                    icon:"error",
-                    title:"invalid OTP",
-                    text:"please try again",
-                    
-                })
+                    icon: "success",
+                    title: "Referral Code Verified!",
+                    text: "You entered: " + code,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = data.redirectUrl || "/";
+                });
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Invalid Referral Code",
+                    text: data.message || "Please try again."
+                });
             }
         })
-        return false
-
-    }
-
-    function resendOTP(){
-    if (resendBtn.disabled) return;
-     $.ajax({
-        type:"POST",
-        url:"resend_otp",
-        success: function(response){
-            if(response.success){
-                console.log("Full Response:", response);
-                Swal.fire({
-                 icon:"success",
-                 title:"OTP Resend Successfully",
-                 showConfirmButton:false,
-                 timer:1500
-                });
-                let newExpiry = response.otpExpiresAt || (Date.now() + 60000);
-                    clearInterval(timerInterval)
-                    timer = Math.floor((newExpiry - Date.now()) / 1000);
-                    resendBtn.disabled = true;
-                document.getElementById("otp").disabled = false
-                document.getElementById("otp").value = ""
-                document.getElementById("timerValue").classList.remove("expired")
-                document.getElementById("timerValue").textContent = timer;
-                startTimer()
-            }else{
-                Swal.fire({
-                    icon:"error",
-                    title:"Error",
-                    text:"An error occured while reseding otp"
-
-                })
-            }
-
-        },
-        error: function() {
+        .catch(error => {
+            console.error("Error:", error);
             Swal.fire({
                 icon: "error",
-                title: "Error",
-                text: "Failed to resend OTP. Please try again."
+                title: "Something Went Wrong",
+                text: "Please try again later."
             });
+        });
+    });
+
+    document.getElementById("noReferralBtn").addEventListener("click", function() {
+        window.location.href = "/";
+    });
+`;
+
+                            document.body.appendChild(script);
+                            // window.location.href = response.redirectUrl
+                        })
+                    }
+                    else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message
+                        })
+
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "invalid OTP",
+                        text: "please try again",
+
+                    })
+                }
+            })
+            return false
+
         }
-     })
-     return false
-    }
+
+        function resendOTP() {
+            if (resendBtn.disabled) return;
+            $.ajax({
+                type: "POST",
+                url: "resend_otp",
+                success: function (response) {
+                    if (response.success) {
+                        
+                        Swal.fire({
+                            icon: "success",
+                            title: "OTP Resend Successfully",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        let newExpiry = response.otpExpiresAt || (Date.now() + 60000);
+                        clearInterval(timerInterval)
+                        timer = Math.floor((newExpiry - Date.now()) / 1000);
+                        resendBtn.disabled = true;
+                        document.getElementById("otp").disabled = false
+                        document.getElementById("otp").value = ""
+                        document.getElementById("timerValue").classList.remove("expired")
+                        document.getElementById("timerValue").textContent = timer;
+                        startTimer()
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "An error occured while reseding otp"
+
+                        })
+                    }
+
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Failed to resend OTP. Please try again."
+                    });
+                }
+            })
+            return false
+        }
 
 
-</script>
-<%- include("../../views/partials/user/footer") %>
+    </script>
+    <%- include("../../views/partials/user/footer") %>
 </body>
-</html>
 
+</html>

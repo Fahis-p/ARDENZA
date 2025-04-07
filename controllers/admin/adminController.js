@@ -45,17 +45,7 @@ const loadDashboard = async (req,res)=>{
     if(req.session.admin){
         try {
 
-           
-
-            
-            res.render("dashboard",{
-            totalSales: 0,
-            totalDiscounts: 0,
-            totalOrders: 0,
-            topProducts:{}
-
-
-            })
+            res.render("dashboard")
 
         } catch (error) {
             res.redirect("/pageerror")

@@ -83,19 +83,7 @@
     color: #ff4c3b;
 }
 
-/* .btn {
-    display: block;
-    width: 100%;
-    background-color: #ff4c3b;
-    color: #fff;
-    text-align: center;
-    font-size: 16px;
-    font-weight: 600;
-    padding: 12px;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: background-color 0.3s ease-in-out;
-} */
+
 
 .btn:hover {
     background-color: #48c164;
@@ -211,10 +199,10 @@
                                                         </td>
 
                                                         <td class="action" data-title="Remove">
-                                                            <a class="btn btn-sm" href="#"
+                                                            <button class="btn btn-sm btn-danger" 
                                                                 onclick="confirmRemove('<%= data[i].productDetails._id %>')">
-                                                                Remove
-                                                            </a>
+                                                                Remove 
+                                                            </button>
                                                         </td>
 
                                                         <% } %>
@@ -343,7 +331,7 @@
 
                 },
                 error: (error) => {
-                    // Handle error
+                    console.log("error",error)
                 }
             })
         }
@@ -361,12 +349,12 @@
         if (result.isConfirmed) {
             $.ajax({
                 url: '/deleteItem',
-                type: 'POST',  // Using POST instead of GET
+                type: 'POST',  
                 contentType: 'application/json',
                 data: JSON.stringify({ id: productId }),
                 success: function(response) {
                     Swal.fire('Deleted!', 'Your item has been removed.', 'success');
-                    location.reload(); // Refresh the cart after deletion
+                    setTimeout(() => location.reload(), 2000);
                 },
                 error: function(err) {
                     Swal.fire('Error!', 'Failed to remove the item.', 'error');

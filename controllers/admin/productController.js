@@ -24,7 +24,7 @@ const getProductAddPage = async (req, res) => {
 
 const addProducts = async (req, res) => {
     try {
-        console.log("Received files in add product:", req.files);
+        
         const products = req.body;
         console.log("products:",products)
         const productExists = await Product.findOne({
@@ -172,7 +172,7 @@ const editProduct = async (req, res) => {
         const product = await Product.findOne({ _id: id });
         const data = req.body;
 
-        // Check if a product with the same name already exists (excluding the current product)
+        
         const existingProduct = await Product.findOne({
             productName: data.productName,
             _id: { $ne: id }
@@ -182,43 +182,43 @@ const editProduct = async (req, res) => {
             return res.status(400).json({ error: "Product with this name already exists. Please try with another name" });
         }
 
-        // Initialize an array to hold the updated image filenames
-        let updatedImages = [...product.productImage]; // Copy the existing images
+        
+        let updatedImages = [...product.productImage]; 
 
-        // If new images are uploaded, replace the specific images in the array
+        
         if (req.files && req.files.length > 0) {
             let imageIndexes = Array.isArray(data.imageIndexes) ? data.imageIndexes : [data.imageIndexes];
             
             imageIndexes = imageIndexes.filter(num => num !== '' && Number(num) > 0);
 
             req.files.forEach((file, i) => {
-                const index = parseInt(imageIndexes[i]) - 1; // Convert to zero-based index
+                const index = parseInt(imageIndexes[i]) - 1; 
                 if (index >= 0 && index < updatedImages.length) {
-                    updatedImages[index] = file.filename; // Replace the specific image
+                    updatedImages[index] = file.filename; 
                 } else {
-                    updatedImages.push(file.filename); // Add new image if index is out of bounds
+                    updatedImages.push(file.filename); 
                 }
             });
         }
 
-        // Prepare the update fields
+        
         const updateFields = {
             productName: data.productName,
             description: data.description,
             brand: data.brand,
-            category: product.category, // Assuming category is not being updated
+            category: product.category, 
             regularPrice: data.regularPrice,
             salePrice: data.salePrice,
             quantity: data.quantity,
             size: data.size,
             color: data.color,
-            productImage: updatedImages, // Update the productImage array
+            productImage: updatedImages, 
         };
 
-        // Update the product in the database
+        
         await Product.findByIdAndUpdate(id, updateFields, { new: true });
 
-        // Redirect to the products page
+        
         res.redirect("/admin/products");
 
     } catch (error) {

@@ -262,53 +262,56 @@
           <div class="filter-section">
             <div class="filter-title">Brands</div>
             <div class="category-brand-container">
-                <ul>
-                    <% for (let i = 0; i < brand.length; i++) { %>
-                        <li class="filter-item" style="list-style: none;">
-                            <a href="/filter?brand=<%= brand[i]._id %>" 
-                               class="<%= selectedBrand && selectedBrand.toString() === brand[i]._id.toString() ? 'active-category' : '' %>">
-                                <%= brand[i].brandName %>
-                            </a>
-                        </li>
-                    <% } %>
-                </ul>
+              <ul>
+                <% for (let i=0; i < brand.length; i++) { %>
+                  <li class="filter-item" style="list-style: none;">
+                    <a href="/filter?brand=<%= brand[i]._id %>"
+                      class="<%= selectedBrand && selectedBrand.toString() === brand[i]._id.toString() ? 'active-category' : '' %>">
+                      <%= brand[i].brandName %>
+                    </a>
+                  </li>
+                  <% } %>
+              </ul>
             </div>
-        </div>
-        
+          </div>
 
 
 
-        <div class="price-filter">
-          <div class="filter-title">Filter by Price</div>
-          <form id="price-filter-form">
+
+          <div class="price-filter">
+            <div class="filter-title">Filter by Price</div>
+            <form id="price-filter-form">
               <div class="price-options">
-                  <a href="/filterPrice?gt=0&lt=500">
-                      <button type="button" class="price-button <%= selectedPrice.gt == 0 && selectedPrice.lt == 500 ? 'active-category' : '' %>">
-                          Under ₹500
-                      </button>
-                  </a>
-      
-                  <a href="/filterPrice?gt=500&lt=1000">
-                      <button type="button" class="price-button <%= selectedPrice.gt == 500 && selectedPrice.lt == 1000 ? 'active-category' : '' %>">
-                          ₹500 - ₹1000
-                      </button>
-                  </a>
-      
-                  <a href="/filterPrice?gt=1000&lt=1500">
-                      <button type="button" class="price-button <%= selectedPrice.gt == 1000 && selectedPrice.lt == 1500 ? 'active-category' : '' %>">
-                          ₹1000 - ₹1500
-                      </button>
-                  </a>
-      
-                  <a href="/filterPrice?gt=1500&lt=1000000">
-                      <button type="button" class="price-button <%= selectedPrice.gt == 1500 ? 'active-category' : '' %>">
-                          Above ₹1500
-                      </button>
-                  </a>
+                <a href="/filterPrice?gt=0&lt=500">
+                  <button type="button"
+                    class="price-button <%= selectedPrice.gt == 0 && selectedPrice.lt == 500 ? 'active-category' : '' %>">
+                    Under ₹500
+                  </button>
+                </a>
+
+                <a href="/filterPrice?gt=500&lt=1000">
+                  <button type="button"
+                    class="price-button <%= selectedPrice.gt == 500 && selectedPrice.lt == 1000 ? 'active-category' : '' %>">
+                    ₹500 - ₹1000
+                  </button>
+                </a>
+
+                <a href="/filterPrice?gt=1000&lt=1500">
+                  <button type="button"
+                    class="price-button <%= selectedPrice.gt == 1000 && selectedPrice.lt == 1500 ? 'active-category' : '' %>">
+                    ₹1000 - ₹1500
+                  </button>
+                </a>
+
+                <a href="/filterPrice?gt=1500&lt=1000000">
+                  <button type="button" class="price-button <%= selectedPrice.gt == 1500 ? 'active-category' : '' %>">
+                    Above ₹1500
+                  </button>
+                </a>
               </div>
-          </form>
-      </div>
-      
+            </form>
+          </div>
+
         </aside>
 
 
@@ -363,8 +366,7 @@
   </div>
   <script>
 
-    console.log("Selected Category:", "<%= selectedCategory %>");
-    console.log("Category List:", "<%= JSON.stringify(category) %>");
+   
 
     async function addToWishlist(productId) {
 
@@ -424,13 +426,30 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            alert('Product added to cart successfully!');
+            Swal.fire({
+              icon: 'success',
+              title: 'Product added!',
+              text: 'Added to cart successfully!',
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true
+            });
+
             document.getElementById(`cart-btn-${i}`).textContent = 'Added to Cart';
             document.getElementById(`cart-btn-${i}`).disabled = true;
-
-
           } else {
-            alert('Failed to add product to cart.');
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: 'Failed to add product to cart.',
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true
+            });
           }
         })
         .catch(error => {

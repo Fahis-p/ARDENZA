@@ -22,6 +22,10 @@ const walletSchema = new Schema({
         required: true
       },
       description: String,
+      orderId: {
+        type: String,
+        default: "none"
+      },
       date: {
         type: Date,
         default: Date.now

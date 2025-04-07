@@ -19,9 +19,9 @@ const categoryInfo = async (req, res) => {
                 { name: { $regex: search, $options: "i" } }  // Case-insensitive search
             ]
         })
-            .sort({ createdAt: -1 }) // Sorting by latest created categories
-            .skip(skip)  // Skipping records for pagination
-            .limit(limit); // Limiting the number of records per page
+            .sort({ createdAt: -1 }) 
+            .skip(skip)  
+            .limit(limit); 
 
         const totalCategories = await Category.countDocuments()
         const totalPages = Math.ceil(totalCategories / limit)
@@ -43,7 +43,7 @@ const categoryInfo = async (req, res) => {
 const addCategory = async (req, res) => {
     const { name, description } = req.body
     try {
-        const existingCategory = await Category.findOne({ name });
+        const existingCategory = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } })
         if (existingCategory) {
             return res.status(400).json({ error: "Category already exist" })
 

@@ -1,0 +1,525 @@
+<%- include("../../views/partials/admin/header") %>
+<style>
+    .breadcrumbs {
+            margin-bottom: 20px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .breadcrumbs span {
+            margin: 0 5px;
+        }
+
+</style>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<section class="content-main">
+    <div class="breadcrumbs">
+        Admin <span>></span> <span id="currentPage">Sales Summary</span>
+    </div>
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="btn-group" role="group">
+            <a href="/admin" class="btn btn-secondary">Dashboard</a>
+            <a href="/admin/salesReport" class="btn btn-secondary">Sales Report</a>
+            <a href="/admin/salesSummary" class="btn btn-primary">Sales Summary</a>
+        </div>
+    </div>
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Sales Summary</h2>
+        </div>
+    </div>
+
+    <!-- Sales Report Form -->
+    <form id="salesReportForm" class="card p-4 shadow mb-4">
+        <div class="mb-3">
+            <label for="period" class="form-label">Select Period:</label>
+            <select id="period" name="period" class="form-select">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="yearly">Yearly</option>
+                <option value="custom">Custom Date Range</option>
+            </select>
+        </div>
+
+        <!-- Daily Selection (Hidden by Default) -->
+        <div id="dailySelection" class="mb-3" style="display: block;">
+            <label for="day" class="form-label">Select Day:</label>
+            <input type="date" id="day" name="day" class="form-control">
+        </div>
+
+        <!-- Weekly Selection (Hidden by Default) -->
+        <div id="weeklySelection" class="mb-3" style="display: none;">
+            <label for="week" class="form-label">Select Week:</label>
+            <input type="week" id="week" name="week" class="form-control">
+        </div>
+
+        <!-- Yearly Selection (Hidden by Default) -->
+        <div id="yearlySelection" class="mb-3" style="display: none;">
+            <label for="year" class="form-label">Select Year:</label>
+            <input type="number" id="year" name="year" class="form-control" min="2024" max="2026" value="2025" >
+        </div>
+
+        <!-- Custom Date Range (Hidden by Default) -->
+        <div id="customDateRange" class="mb-3" style="display: none;">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="startDate" class="form-label">Start Date:</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label for="endDate" class="form-label">End Date:</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+    </form>
+
+    <!-- Report Result Section -->
+    <div id="reportResult" class="card p-4 shadow mb-4">
+        <h4 class="text-center mb-4">Report Summary</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-center p-3">
+                    <h5>Total Sales</h5>
+                    <p id="totalSales" class="fs-4"><%=totalSales%></p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center p-3">
+                    <h5>Total Discounts</h5>
+                    <p id="totalDiscounts" class="fs-4"><%=totalDiscounts%></p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center p-3">
+                    <h5>Total Orders</h5>
+                    <p id="totalOrders" class="fs-4"><%=totalOrders%></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-4 shadow mb-4">
+        <h4 class="card-title mb-4">Best Selling Products</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Sold</th>
+                        <th>Revenue</th>
+                    </tr>
+                </thead>
+                <tbody id="bestSellingProductsBody">
+                    <!-- Rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card p-4 shadow mb-4">
+        <h4 class="card-title mb-4">Best Selling Categories</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Category Name</th>  
+                        <th>Sold</th>
+                        <th>Revenue</th>
+                    </tr>
+                </thead>
+                <tbody id="bestSellingCategoriesBody">
+                    <!-- Rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card p-4 shadow mb-4">
+        <h4 class="card-title mb-4">Best Selling Brands</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Brand Name</th>  
+                        <th>Sold</th>
+                        <th>Revenue</th>
+                    </tr>
+                </thead>
+                <tbody id="bestSellingBrandsBody">
+                    <!-- Rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    
+  
+
+    
+       
+ <!-- Transactions List Section (Initially empty) -->
+<div class="card p-4 shadow mb-4">
+    <h4 class="card-title mb-4">Wallet Transactions</h4>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Date</th>
+                    <th>User</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="transactionsTableBody">
+                <!-- Transactions will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Transaction Detail Modal  -->
+<div class="modal fade" id="transactionDetailModal" tabindex="-1" aria-labelledby="transactionDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="transactionDetailModalLabel">Transaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>User Information</h6>
+                        <p><strong>Name:</strong> <span id="detailUserName"></span></p>
+                        <p><strong>Email:</strong> <span id="detailUserEmail"></span></p>
+                        <p><strong>Phone:</strong> <span id="detailUserPhone"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Transaction Information</h6>
+                        <p><strong>Transaction ID:</strong> <span id="detailTransactionId"></span></p>
+                        <p><strong>Date:</strong> <span id="detailTransactionDate"></span></p>
+                        <p><strong>Type:</strong> <span id="detailTransactionType" class="badge"></span></p>
+                        <p><strong>Amount:</strong> ₹<span id="detailTransactionAmount"></span></p>
+                    </div>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6>Transaction Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <p id="detailTransactionDescription"></p>
+                        <div id="relatedOrderSection" style="display: none;">
+                            <hr>
+                            <p>This transaction is related to an order:</p>
+                            <button id="viewOrderBtn" class="btn btn-sm btn-primary">View Order Details</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+</section>
+
+<script>
+    
+    document.getElementById('period').addEventListener('change', function () {
+    const period = this.value;
+    const dailySelection = document.getElementById('dailySelection');
+    const weeklySelection = document.getElementById('weeklySelection');
+    const yearlySelection = document.getElementById('yearlySelection');
+    const customDateRange = document.getElementById('customDateRange');
+
+    // Hide all fields initially
+    dailySelection.style.display = 'none';
+    weeklySelection.style.display = 'none';
+    yearlySelection.style.display = 'none';
+    customDateRange.style.display = 'none';
+
+    // Show the relevant field based on the selected period
+    if (period === 'daily') {
+        dailySelection.style.display = 'block';
+    } else if (period === 'weekly') {
+        weeklySelection.style.display = 'block';
+    } else if (period === 'yearly') {
+        yearlySelection.style.display = 'block';
+
+    } else if (period === 'custom') {
+        customDateRange.style.display = 'block';
+    }
+});
+
+let transactionsData = [];
+
+document.getElementById('salesReportForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+     
+    // Log FormData entries for debugging
+    for (const [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
+
+    const period = formData.get('period');
+
+    // Add additional data based on the selected period
+    if (period === 'daily') {
+        const day = formData.get('day');
+        formData.append('date', day);
+    } else if (period === 'weekly') {
+        const week = formData.get('week');
+        const [startDate, endDate] = getStartAndEndDateOfWeek(week);
+        formData.append('startDate', startDate);
+        formData.append('endDate', endDate);
+    } else if (period === 'yearly') {
+        const year = formData.get('year');
+        formData.append('year', year); 
+    }
+
+    const params = new URLSearchParams(formData);
+     
+    
+    const response = await fetch(`salesSummaryReport?${params}`);
+    const data = await response.json();
+
+    if (response.status === 400) {
+        alert(`❌ Error: ${data.error}`);
+        return;
+    }
+
+    // Display report data
+    document.getElementById('totalSales').textContent = `₹${data.reportData.totalSales}`;
+    document.getElementById('totalDiscounts').textContent = `₹${data.reportData.totalDiscounts}`;
+    document.getElementById('totalOrders').textContent = data.reportData.totalOrders;
+
+    updateBestSellingProductsTable(data.topProducts)
+    updateBestSellingCategoriesTable(data.topCategories)
+    updateBestSellingBrandsTable(data.topBrands)
+    updateTransactionsTable(data.transactions)
+
+});
+
+function updateBestSellingProductsTable(topProducts) {
+    const tableBody = document.getElementById('bestSellingProductsBody');
+
+    // Clear existing rows
+    tableBody.innerHTML = '';
+
+    // Check if there are products to display
+    if (Array.isArray(topProducts) && topProducts.length > 0) {
+        // Add new rows for each product
+        topProducts.forEach(product => {
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${product.productName}</td>
+                <td>${product.categoryName || 'N/A'}</td>
+                <td>₹${(product.price || 0).toFixed(2)}</td>
+                <td>${product.totalQuantity}</td>
+                <td>₹${product.revenue.toFixed(2)}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    } else {
+        // Display a message if no products are found
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="5" class="text-center">No products found for the selected period.</td>
+        `;
+        tableBody.appendChild(row);
+    }
+}
+
+function updateBestSellingCategoriesTable(topCategories) {
+    const tableBody = document.getElementById('bestSellingCategoriesBody');
+
+    
+    tableBody.innerHTML = '';
+
+    
+    if (Array.isArray(topCategories) && topCategories.length > 0) {
+        
+        topCategories.forEach(category => {
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${category.categoryName}</td>
+                <td>${category.sold}</td>
+                <td>₹${category.revenue.toFixed(2)}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    } else {
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="3" class="text-center">No categories found for the selected period.</td>
+        `;
+        tableBody.appendChild(row);
+    }
+}
+
+function updateBestSellingBrandsTable(topBrands) {
+    const tableBody = document.getElementById('bestSellingBrandsBody');
+
+    
+    tableBody.innerHTML = '';
+
+    
+    if (Array.isArray(topBrands) && topBrands.length > 0) {
+        
+        topBrands.forEach(brand => {
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${brand._id}</td>
+                <td>${brand.totalSold}</td>
+                <td>₹${brand.totalRevenue.toFixed(2)}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    } else {
+        // Display a message if no brands are found
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="3" class="text-center">No brands found for the selected period.</td>
+        `;
+        tableBody.appendChild(row);
+    }
+}
+
+
+function updateTransactionsTable(transactions) {
+    const tableBody = document.getElementById('transactionsTableBody');
+    tableBody.innerHTML = '';
+
+    // Store transactions for later access
+    transactionsData = transactions;
+
+    if (Array.isArray(transactions)) {
+        if (transactions.length > 0) {
+            transactions.forEach((transaction, index) => {
+                const row = document.createElement('tr');
+                
+                const transactionDate = new Date(transaction.date);
+                const formattedDate = transactionDate.toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                row.innerHTML = `
+                    <td>${transaction._id || 'N/A'}</td>
+                    <td>${formattedDate}</td>
+                    <td>${transaction.userId?.name || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${transaction.type === 'credit' ? 'bg-success' : 'bg-danger'}">
+                            ${transaction.type?.toUpperCase() || 'N/A'}
+                        </span>
+                    </td>
+                    <td>₹${transaction.amount?.toFixed(2) || '0.00'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary view-details" 
+                                data-index="${index}"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#transactionDetailModal">
+                            View Details
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } else {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="6" class="text-center">No transactions found</td>`;
+            tableBody.appendChild(row);
+        }
+    }
+}
+document.getElementById('transactionDetailModal').addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    const index = button.getAttribute('data-index');
+    showTransactionDetails(index);
+});
+
+// Function to show transaction details
+function showTransactionDetails(index) {
+    const transaction = transactionsData[index];
+    if (!transaction) return;
+
+    // Format date with time
+    const transactionDate = new Date(transaction.date);
+    const formattedDateTime = transactionDate.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    // User Information
+    document.getElementById('detailUserName').textContent = transaction.userId?.name || 'N/A';
+    document.getElementById('detailUserEmail').textContent = transaction.userId?.email || 'N/A';
+    document.getElementById('detailUserPhone').textContent = transaction.userId?.phone || 'N/A';
+
+    // Transaction Information
+    document.getElementById('detailTransactionId').textContent = transaction._id || 'N/A';
+    document.getElementById('detailTransactionDate').textContent = formattedDateTime;
+    
+    const typeBadge = document.getElementById('detailTransactionType');
+    typeBadge.textContent = transaction.type?.toUpperCase() || 'N/A';
+    typeBadge.className = `badge ${transaction.type === 'credit' ? 'bg-success' : 'bg-danger'}`;
+    
+    document.getElementById('detailTransactionAmount').textContent = transaction.amount?.toFixed(2) || '0.00';
+    document.getElementById('detailTransactionDescription').textContent = transaction.description || 'No description provided';
+
+    // Handle related order
+    const orderSection = document.getElementById('relatedOrderSection');
+    const viewOrderBtn = document.getElementById('viewOrderBtn');
+    
+    if (transaction.orderId) {
+        orderSection.style.display = 'block';
+        viewOrderBtn.onclick = () => {
+            let orderId = transaction.orderId;  
+            let searchQuery = encodeURIComponent(orderId); // Encode to handle special characters
+
+    // Redirect to the order list page with search query
+        window.location.href = `/admin/orderList?search=${searchQuery}`;
+        };
+    } else {
+        orderSection.style.display = 'none';
+    }
+}
+
+
+
+
+function getStartAndEndDateOfWeek(week) {
+    const [year, weekNumber] = week.split('-W');
+    const startDate = new Date(year, 0, 1 + (weekNumber - 1) * 7);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    return [startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]];
+}
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

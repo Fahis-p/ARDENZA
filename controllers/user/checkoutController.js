@@ -25,8 +25,12 @@ const getCheckout = async (req, res) => {
         let grandTotal = 0;
 
         if (cartDetailsFull && cartDetailsFull.items) {
-            grandTotal = cartDetailsFull.items.reduce((acc, item) => acc + item.totalPrice, 0);
+            grandTotal = cartDetailsFull.items.reduce((acc, item) =>
+
+                 acc + item.totalPrice, 0);
         }
+
+        
 
 
         const coupons = await Coupon.find({
@@ -64,6 +68,40 @@ const addCheckoutAddress = async (req, res) => {
         const userId = req.session.user
         const userData = await User.findOne({ _id: userId })
         const { addressType, name, city, landMark, state, pincode, phone, altPhone } = req.body;
+        const namePattern = /^[A-Za-z\s]+$/;
+        const pincodePattern = /^\d{6}$/;
+        const phonePattern = /^\d{10}$/;
+        
+        // Validate required fields
+        if (!addressType || !name || !city || !landMark || !state || !pincode || !phone || !altPhone) {
+            return res.redirect("/checkout?error=All fields are required");
+        }
+        
+        // Validate specific fields
+        if (!namePattern.test(name)) {
+            return res.redirect("/checkout?error=Invalid name format");
+        }
+        if (!namePattern.test(city)) {
+            return res.redirect("/checkout?error=Invalid city format");
+        }
+        if (!namePattern.test(landMark)) {
+            return res.redirect("/checkout?error=Invalid landmark format");
+        }
+        if (!namePattern.test(state)) {
+            return res.redirect("/checkout?error=Invalid state format");
+        }
+        if (!pincodePattern.test(pincode)) {
+            return res.redirect("/checkout?error=Invalid pincode (must be 6 digits)");
+        }
+        if (!phonePattern.test(phone)) {
+            return res.redirect("/checkout?error=Invalid phone number (must be 10 digits)");
+        }
+        if (!phonePattern.test(altPhone)) {
+            return res.redirect("/checkout?error=Invalid alternate phone number (must be 10 digits)");
+        }
+        if (phone === altPhone) {
+            return res.redirect("/checkout?error=Phone and alternate number should be different");
+        }
 
         const userAddress = await Address.findOne({ userId: userData._id })
         if (!userAddress) {
@@ -101,6 +139,43 @@ const editCheckoutAddress = async (req, res) => {
         const userId = req.session.user
         const userData = await User.findOne({ _id: userId })
         const { addressType, name, city, landMark, state, pincode, phone, altPhone, address_id } = req.body;
+        const namePattern = /^[A-Za-z\s]+$/;
+        const pincodePattern = /^\d{6}$/;
+        const phonePattern = /^\d{10}$/;
+        
+        // Validate required fields
+        if (!addressType || !name || !city || !landMark || !state || !pincode || !phone || !altPhone) {
+            return res.redirect("/checkout?error=All fields are required");
+        }
+        
+        // Validate specific fields
+        if (!namePattern.test(name)) {
+            return res.redirect("/checkout?error=Invalid name format");
+        }
+        if (!namePattern.test(city)) {
+            return res.redirect("/checkout?error=Invalid city format");
+        }
+        if (!namePattern.test(landMark)) {
+            return res.redirect("/checkout?error=Invalid landmark format");
+        }
+        if (!namePattern.test(state)) {
+            return res.redirect("/checkout?error=Invalid state format");
+        }
+        if (!pincodePattern.test(pincode)) {
+            return res.redirect("/checkout?error=Invalid pincode (must be 6 digits)");
+        }
+        if (!phonePattern.test(phone)) {
+            return res.redirect("/checkout?error=Invalid phone number (must be 10 digits)");
+        }
+        if (!phonePattern.test(altPhone)) {
+            return res.redirect("/checkout?error=Invalid alternate phone number (must be 10 digits)");
+        }
+        if (phone === altPhone) {
+            return res.redirect("/checkout?error=Phone and alternate number should be different");
+        }
+        
+
+
 
         const findAddress = await Address.findOne({
             "address._id": address_id
@@ -151,7 +226,7 @@ const applyCoupon = async (req, res) => {
         const userId = req.session.user
         const { couponCode, subtotal } = req.body;
 
-        // Example validation
+       
         if (!couponCode) {
             return res.json({ success: false, message: "Invalid coupon!" });
         }
@@ -371,16 +446,13 @@ const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-// const razorpay = new Razorpay({
-//     key_id:'rzp_test_JgvLO1LVFXqLkX',
-//     key_secret:'yyfF6dyqqDRGqvQDdvlKnZLb'
-// });
+
 
 const createRazorpayOrder = async (req,res)=>{
     try {
         const { amount, currency } = req.body;
         const options = {
-            amount: amount * 100, // Razorpay accepts paise
+            amount: amount * 100, 
             currency,
             receipt: `receipt_${Date.now()}`,
         };
@@ -423,7 +495,7 @@ const verifyPayment = async (req,res)=>{
 
         
         let status = "failed";
-        let itemStatus = "failed"; // default to failed
+        let itemStatus = "failed"; 
 
         if (razorpay_payment_id && razorpay_signature) {
             const generatedSignature = crypto
@@ -437,7 +509,7 @@ const verifyPayment = async (req,res)=>{
 
             paymentStatus = "paid"; 
             status = "processing";
-            itemStatus = "ordered"; // set to ordered on successful payment
+            itemStatus = "ordered"; 
         }
 
         orderedItems = JSON.parse(orderedItems);
@@ -497,7 +569,7 @@ const verifyPayment = async (req,res)=>{
 
 
 
-        //below check
+        
 
         console.log("Order Confirmed:", {
             paymentId: razorpay_payment_id,
@@ -508,9 +580,7 @@ const verifyPayment = async (req,res)=>{
             paymentMethod,
         });
 
-        console.log("ordered",orderedItems)
-
-        console.log("req.body here at verify payment",req.body)
+        
 
         
 
@@ -539,7 +609,7 @@ const retryPayment = async (req,res)=>{
 
         let paymentStatus = 'failed'
         let status = "failed";
-        let itemStatus = "failed"; // default to failed
+        let itemStatus = "failed"; 
 
         if (razorpay_payment_id && razorpay_signature) {
             const generatedSignature = crypto
@@ -553,10 +623,10 @@ const retryPayment = async (req,res)=>{
 
             paymentStatus = "paid"; 
             status = "processing";
-            itemStatus = "ordered"; // set to ordered on successful payment
+            itemStatus = "ordered"; 
         }
 
-        // Find the order by orderId
+        
         const order = await Order.findOne({ orderId });
 
         if (!order) {
@@ -564,11 +634,11 @@ const retryPayment = async (req,res)=>{
         }
 
 
-        // Update order status and payment status
+        
         order.status = status;
         order.paymentStatus = paymentStatus;
 
-        // Save the updated order
+        
         await order.save();
 
         res.json({ success: true, message: "Payment retried successfully", order });

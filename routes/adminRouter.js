@@ -7,7 +7,9 @@ const brandController = require("../controllers/admin/brandController")
 const productController = require("../controllers/admin/productController")
 const couponController = require("../controllers/admin/couponController")
 const adOrderController = require("../controllers/admin/adOrderController")
-const dashboardController = require("../controllers/admin/dashboardController")
+const dashSummaryController = require("../controllers/admin/dashSummaryController")
+const dashMainController = require("../controllers/admin/dashMainController")
+const dashSalesController = require("../controllers/admin/dashSalesController")
 const {userAuth,adminAuth}= require("../middlewares/auth")
 const multer = require("multer")
 const storage = require("../helpers/multer")
@@ -69,11 +71,25 @@ router.post("/cancelOrder",adminAuth,adOrderController.cancelOrder)
 router.post("/approveReturn",adminAuth,adOrderController.approveReturn)
 router.post("/rejectReturn/:orderId",adminAuth,adOrderController.rejectReturn)
 
-//Dashboard Management
+//Main Dashboard
+router.get('/dashboardData',adminAuth,dashMainController.dashboardData)
 
-router.get("/salesReport",adminAuth,dashboardController.salesReport)
-router.get('/salesReport/pdf',adminAuth,dashboardController.salesReportPdf)
-router.get('/salesReport/excel',adminAuth,dashboardController.salesReportExcel)
+//Sales Summary (dashboard 2)
+
+router.get("/salesSummary",adminAuth,dashSummaryController.loadSummarypage)
+router.get('/salesSummaryReport',adminAuth,dashSummaryController.salesSummaryReport)
+
+
+//Sales Report (dashboard 3)
+
+router.get("/salesReport",adminAuth,dashSalesController.loadReportpage)
+router.get("/salesReportData",adminAuth,dashSalesController.salesReportData)
+router.get('/salesReportData/pdf',adminAuth,dashSalesController.salesReportPdf)
+router.get('/salesReportData/excel',adminAuth,dashSalesController.salesReportExcel)
+
+
+
+
 
 
 module.exports = router

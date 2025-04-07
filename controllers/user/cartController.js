@@ -108,10 +108,10 @@ const grandTotal = cartDetailsFull.items.reduce((acc, item) => acc + item.totalP
         { 
             $set: { "items.$.quantity": quantity, "items.$.totalPrice": quantity * product.salePrice } 
         },
-        { new: true } // Returns the updated cart
+        { new: true } 
     );
        
-    console.log("count cart is :",cart)
+    
       
     if (!cart) {
       return res.status(400).json({ success: false, message: "Cart not found" });
@@ -139,8 +139,7 @@ const grandTotal = cartDetailsFull.items.reduce((acc, item) => acc + item.totalP
         const userId = req.session.user?._id;
         const { productId, quantity } = req.body;
 
-        console.log("productId in add to cart:",productId)
-        console.log("quantity in add to cart:",quantity)
+        
 
         if (!userId) {
             return res.status(401).json({ success: false, message: "Unauthorized: No user logged in" });
@@ -180,7 +179,7 @@ const grandTotal = cartDetailsFull.items.reduce((acc, item) => acc + item.totalP
               return res.status(400).json({ success: false, message: "cart limt is 3" });
             }
 
-            console.log("this existingindex",existingItemIndex)
+            
 
             
 

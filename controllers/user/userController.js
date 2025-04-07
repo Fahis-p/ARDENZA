@@ -3,6 +3,7 @@ const User = require("../../models/userSchema.js")
 const Category = require("../../models/categorySchema.js")
 const Product = require("../../models/productSchema.js")
 const Brand = require("../../models/brandSchema.js")
+const Wallet = require("../../models/walletSchema")
 const env = require("dotenv").config()
 const nodemailer = require("nodemailer")
 const bcrypt = require("bcrypt")
@@ -19,7 +20,7 @@ const googleAuth = async (req, res, next) => {
 
     try {
         const user = await User.findById(req.session.passport.user);
-        req.session.user = user; // Store full user data
+        req.session.user = user; 
         next()
     } catch (error) {
         console.log("Error storing session user:", error);
@@ -394,7 +395,7 @@ const verifyOtp = async (req, res) => {
     try {
         const { otp } = req.body
         console.log(otp)
-        if (otp === req.session.userOtp) {
+        if (otp == req.session.userOtp) {
             const user = req.session.userData
             const passwordHash = await securePassword(user.password)
             const saveUserData = new User({
@@ -404,7 +405,7 @@ const verifyOtp = async (req, res) => {
                 password: passwordHash
             })
             await saveUserData.save()
-            // req.session.user = saveUserData.id
+            
             req.session.user = {
                 _id: saveUserData._id
             };
@@ -449,12 +450,6 @@ const resendOtp = async (req, res) => {
 const loadLogin = async (req, res) => {
     try {
         if (!req.session.user) {
-
-            // req.session.user = {
-            //     _id: '67ac19f158f92942fd83daf1'
-            // };
-
-            // res.redirect("http://localhost:3000/checkout?userId=67ac19f158f92942fd83daf1")
 
             return res.render("login")
         } else {
@@ -510,6 +505,81 @@ const logout = async (req, res) => {
     }
 }
 
+const verifyReferral = async (req,res)=>{
+    try {
+        const { code } = req.body;
+        const user = req.session.user
+        console.log("req session is ", req.session.userData)
+        console.log("main user",user)
+
+        const referralUser = await User.findOne({ referalCode: code })
+
+        console.log("referralUser",referralUser)
+        
+    
+        
+        if (referralUser) {
+            
+            referralUser.redeemedUsers.push(user._id); 
+            await referralUser.save();
+            console.log(referralUser._id)
+            const wallet = await Wallet.findOne({ userId:referralUser._id});
+                        if (!wallet) {
+                            
+                            const newWallet = new Wallet({
+                                userId: referralUser._id,
+                                balance: 100,  
+                                transactions: [
+                                    {
+                                        amount: 100,
+                                        type: "credit",
+                                        description: "Referral income"
+                                    }
+                                ]
+                            });
+            
+                            await newWallet.save();
+                            
+                        } else {
+                            
+                            wallet.balance += 100;
+                            wallet.transactions.push({
+                                amount: 100,
+                                type: "credit",
+                                description: "Referral income"
+                            });
+            
+                            await wallet.save();
+                            console.log("Wallet updated with credited amount!");
+                        }
+
+            
+
+            return res.json({
+                success: true,
+                redirectUrl: "/"
+            });
+
+        } else {
+            return res.json({
+                success: false,
+                message: "Invalid referral code."
+            });
+        }
+
+
+        
+    } catch (error) {
+
+        console.error("Database error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error."
+        });
+        
+    }
+}
+
 
 module.exports = {
     loadHomepage,
@@ -523,6 +593,7 @@ module.exports = {
     signup,
     verifyOtp,
     resendOtp,
+    verifyReferral,
     loadLogin,
     login,
     logout

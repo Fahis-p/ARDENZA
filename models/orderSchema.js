@@ -31,6 +31,11 @@ const orderSchema = new Schema({
             type : Number,
             default : 0
             
+        },
+        itemStatus : {
+            type : String,
+            default : "processing"
+            
         }
 
     }],

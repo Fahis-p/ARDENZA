@@ -26,6 +26,7 @@ router.get("/signup",userController.loadSignup)
 router.post("/signup",userController.signup)
 router.post("/verify_otp",userController.verifyOtp)
 router.post("/resend_otp",userController.resendOtp)
+router.post("/verifyReferral",userController.verifyReferral)
 
 router.get("/auth/google",passport.authenticate("google",{scope:["profile","email"],prompt:"select_account"}))
 router.get("/auth/google/callback",passport.authenticate("google",{failureRedirect:"/signup"}),userController.googleAuth,(req,res)=>{
@@ -74,6 +75,8 @@ router.get("/orderTab",userAuth,userOrderController.orderTab)
 router.get("/orderDetails",userAuth,userOrderController.orderDetails)
 router.post("/returnOrder",userAuth,userOrderController.returnOrder)
 router.post("/cancelOrder",userAuth,userOrderController.userCancelOrder)
+router.post("/returnItemOrder",userAuth,userOrderController.returnItemOrder)
+router.post("/cancelItemOrder",userAuth,userOrderController.userCancelItemOrder)
 router.get('/downloadInvoice/:orderId',userAuth,userOrderController.generateInvoicePDF)
 
 //profile Management 
