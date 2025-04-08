@@ -99,6 +99,7 @@ const orderDetails = async (req, res) => {
             cancelItems = false
 
         }
+        cancelItems = true
         console.log("cancelItems boolean",cancelItems)
 
 
