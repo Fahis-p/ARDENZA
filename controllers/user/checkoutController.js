@@ -353,6 +353,8 @@ const postCheckout = async (req, res) => {
             orderedItemsList.push(productObj)
         }
 
+        let paymentStatus = "pending"
+
         if (paymentMethod === "wallet") {
             const wallet = await Wallet.findOne({ userId });
 
@@ -362,6 +364,8 @@ const postCheckout = async (req, res) => {
                     error: "Insufficient wallet balance.",
                 });
             }
+
+            paymentStatus = "paid"
 
             // Deduct amount from wallet
             wallet.balance -= finalAmount;
@@ -387,9 +391,11 @@ const postCheckout = async (req, res) => {
             totalPrice: totalPrice,
             orderedItems: orderedItemsList,
             discount: discountAmount,
+            paymentStatus,
             status: "processing",
             couponApplied: false,
             finalAmount: finalAmount,
+            currentAmount:finalAmount,
             userId: userId
 
         });
@@ -559,6 +565,7 @@ const verifyPayment = async (req,res)=>{
             paymentStatus: paymentStatus ?? "paid",
             couponApplied: false,
             finalAmount: finalAmount,
+            currentAmount:finalAmount,
             userId: userId 
 
         }); 

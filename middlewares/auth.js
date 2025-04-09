@@ -17,12 +17,12 @@ const userAuth = (req,res,next)=>{
          })
       }else{
 
-        // res.redirect("/login")
-        req.session.user = {
-            _id: "67ac19f158f92942fd83daf1"
-        };
+        res.redirect("/login")
+        // req.session.user = {
+        //     _id: "67ac19f158f92942fd83daf1"
+        // };
 
-        next()
+        // next()
       }
 }
 

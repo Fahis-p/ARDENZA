@@ -291,12 +291,18 @@ const getTransactions = async (startDate, endDate) => {
 const calculateSalesData = async (startDate, endDate) => {
     try {
         
-        const orders = await Order.find({
+        let orders = await Order.find({
             createdOn: { $gte: startDate, $lte: endDate },
         });
 
+        let allowedStatuses = ["delivered", "processing", "shipped", "Rejected"];
+
+            orders = orders.filter(order =>
+              allowedStatuses.includes(order.status)
+            );
+
         
-        const totalSales = orders.reduce((sum, order) => sum + order.finalAmount, 0);
+        const totalSales = orders.reduce((sum, order) => sum + order.currentAmount, 0);
         const totalDiscounts = orders.reduce((sum, order) => sum + order.discount, 0);
         const totalOrders = orders.length;
 
@@ -325,7 +331,7 @@ const parseISOWeek = (weekString) => {
 
 const salesSummaryReport = async (req, res) => {
     try {
-        console.log("yes")
+        
         const { period, date, week, year, startDate, endDate } = req.query;
         const yearValue = Array.isArray(year) ? year[0] : year;
 

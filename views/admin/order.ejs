@@ -545,6 +545,7 @@ button:hover {
                                     <th>Name</th>
                                     <th>Quantity</th>
                                     <th>Price</th>
+                                    <th>status</th>
                                     <th>Total</th>
                                 </tr>
                             </thead>
@@ -658,6 +659,7 @@ function openModal(index) {
         <td>${item.productId.productName}</td>
         <td>${item.quantity}</td>
         <td>₹${item.price}</td>
+        <td>${item.itemStatus}</td>
         <td>₹${item.price * item.quantity}</td>
     `;
         productsList.appendChild(row);

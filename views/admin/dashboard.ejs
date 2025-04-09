@@ -369,7 +369,7 @@
             }
 
             function fetchDashboardData(period = 'monthly') {
-                // Attempt to destroy all existing charts before fetching new data
+                
                 Object.keys(chartInstances).forEach(key => {
                     try {
                         safelyDestroyChart(key);

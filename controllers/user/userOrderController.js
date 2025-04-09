@@ -81,25 +81,46 @@ const orderDetails = async (req, res) => {
             return res.status(404).send("Order not found");
 
         }
-        console.log(orderDetails)
+       
 
-        let cancelItems = orderDetails.orderedItems.reduce((acc,item)=>{
-                   if(item.itemStatus == 'cancelled'){
-                        acc++
-                   }
-                   return acc
-        },0)
+        let cancelItems = orderDetails.orderedItems.reduce((acc, item) => {
+            if (item.itemStatus == 'cancelled') {
+                acc++
+            }
+            return acc
+        }, 0)
 
-        console.log("cancelItems",cancelItems)
 
-        if(cancelItems == orderDetails.orderedItems.length-1){
+        
+
+        if (cancelItems == orderDetails.orderedItems.length - 1) {
             cancelItems = true
-        }else {
+        } else {
 
             cancelItems = false
 
         }
-        console.log("cancelItems boolean",cancelItems)
+        
+
+        let returnItems = orderDetails.orderedItems.reduce((acc, item) => {
+            if (item.itemStatus == 'delivered') {
+                acc++
+            }
+            return acc
+        }, 0)
+
+        
+
+
+        if (returnItems == 1) {
+            returnItems = true
+        } else {
+
+            returnItems = false
+
+        }
+
+        
 
 
         const addressData = await Address.findOne({ userId: userId })
@@ -111,7 +132,8 @@ const orderDetails = async (req, res) => {
             user: userData,
             order: orderDetails,
             address,
-            cancelItems
+            cancelItems,
+            returnItems
         });
 
     } catch (error) {
@@ -132,24 +154,53 @@ const returnOrder = async (req, res) => {
             return res.status(404).json({ success: false, message: "Order not found" });
         }
 
-        const existingReturn = await Return.findOne({ orderId });
-        if (existingReturn) {
-            return res.status(400).json({ success: false, message: "Return request already submitted for this order" });
-        }
+
+        let returnItems = []
+
+        order.orderedItems.forEach((item) => {
+            if (item.itemStatus === "delivered") {
+
+                returnItems.push({
+                    itemId: item._id,
+                    returnReason: reason,
+
+                })
+
+            }
+        })
 
         
-        const newReturn = new Return({
-            userId: order.userId,
-            orderId,
-            orderOid: order._id,
-            returnReason: reason,
-            returnStatus: "Pending"
-        });
-        await newReturn.save();
+
+
+        let existingReturn = await Return.findOne({ orderId });
+
+        if (existingReturn) {
+            existingReturn.returnItems.push(...returnItems);
+            existingReturn.returnType = "full";
+            existingReturn.returnReason = reason;
+            existingReturn.returnStatus = "Pending";
+
+            await existingReturn.save();
+        } else {
+            
+            const newReturn = new Return({
+                userId: order.userId,
+                orderId,
+                orderOid: order._id,
+                returnType: "full",
+                returnItems: returnItems,
+                returnReason: reason,
+                returnStatus: "Pending"
+            });
+
+            await newReturn.save();
+        }
 
         order.status = "Return Requested";
-        order.orderedItems.forEach((item)=>{
-            item.itemStatus = "Return Requested"
+        order.orderedItems.forEach((item) => {
+            if (item.itemStatus === "delivered") {
+                item.itemStatus = "Return Requested"
+            }
         })
         await order.save();
 
@@ -166,44 +217,60 @@ const returnOrder = async (req, res) => {
 
 const returnItemOrder = async (req, res) => {
     try {
-        const { orderId, reason , itemId} = req.body;
+        const { orderId, reason, itemId } = req.body;
         const order = await Order.findOne({ orderId });
         if (!order) {
             return res.status(404).json({ success: false, message: "Order not found" });
         }
 
-        const existingReturn = await Return.findOne({ orderId });
-        if (existingReturn) {
-            return res.status(400).json({ success: false, message: "Return request already submitted for this order" });
-        }
+        
 
-        order.orderedItems.forEach((item)=>{
-            if(item._id == itemId){
-                console.log("yes it matches")
+        let returnItems = []
+
+        order.orderedItems.forEach((item) => {
+            if (item._id == itemId) {
+
+                returnItems.push({
+                    itemId: item._id,
+                    returnReason: reason,
+
+                })
+
+            }
+        })
+
+        order.orderedItems.forEach((item) => {
+            if (item._id == itemId) {
                 item.itemStatus = "Return Requested"
             }
         })
 
-        
-        
 
+        let existingReturn = await Return.findOne({ orderId });
+         
+        if (existingReturn) {
+            existingReturn.returnItems.push(...returnItems);
+            existingReturn.returnType = "single";
+            existingReturn.returnReason = reason;
+            existingReturn.returnStatus = "Pending";
 
+            await existingReturn.save();
+        }else{ 
 
-        
-        // const newReturn = new Return({
-        //     userId: order.userId,
-        //     orderId,
-        //     orderOid: order._id,
-        //     returnReason: reason,
-        //     returnStatus: "Pending"
-        // });
-        // await newReturn.save();
+        const newReturn = new Return({
+            userId: order.userId,
+            orderId,
+            orderOid: order._id,
+            returnType: "single",
+            returnItems: returnItems,
+            returnReason: reason,
+            returnStatus: "Pending"
+        });
 
-        // order.status = "Return Requested";
-        // order.orderedItems.forEach((item)=>{
-        //     item.itemStatus = "Return Requested"
-        // })
-        // await order.save();
+        await newReturn.save();
+       }
+
+        await order.save();
 
         return res.status(200).json({ success: true, message: "Return request submitted successfully" });
 
@@ -237,18 +304,20 @@ const userCancelOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: "Order is already cancelled" });
         }
 
-        let reduceAmount = 0 
+        let reduceAmount = 0
 
-        order.orderedItems.forEach((item)=>{
-             if (item.itemStatus != "processing"){
+        order.orderedItems.forEach((item) => {
+            if (item.itemStatus != "processing") {
 
-                reduceAmount += item.totalPrice  
+                reduceAmount += item.totalPrice
 
-             } 
+            }
         })
 
-        console.log("reduceAmount",reduceAmount)
+        
 
+
+          
 
 
 
@@ -288,12 +357,16 @@ const userCancelOrder = async (req, res) => {
 
         }
 
+        
+
         order.status = 'cancelled';
+        order.currentAmount = 0
         order.orderedItems.forEach((item) => {
             if (item.itemStatus === "processing") {
                 item.itemStatus = "cancelled";
             }
         })
+
         await order.save();
 
 
@@ -313,7 +386,7 @@ const userCancelItemOrder = async (req, res) => {
         if (!orderId) {
             return res.status(400).json({ success: false, message: "Order ID is required" });
         }
-        console.log("itemId", itemId)
+        
 
         const order = await Order.findOne({ orderId });
 
@@ -373,7 +446,7 @@ const userCancelItemOrder = async (req, res) => {
 
 
         item.itemStatus = "cancelled";
-
+        order.currentAmount = order.currentAmount - item.totalPrice
         await order.save();
 
         return res.json({ success: true, message: "Order cancelled successfully" });
@@ -399,8 +472,7 @@ const generateInvoicePDF = async (req, res) => {
 
         const addressData = await Address.findOne({ userId: order.userId });
         const address = addressData ? addressData.address.find(addr => addr._id.toString() === order.address.toString()) : {};
-        console.log("addressData:", addressData)
-        console.log("address:", address)
+        
 
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
         const filePath = path.join(__dirname, "../../public/invoices", `invoice_${orderId}.pdf`);

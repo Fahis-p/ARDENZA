@@ -19,7 +19,7 @@ const getOrders = async (req, res) => {
 
         }
         const limit = 3
-
+        
         const orderList = await Order.find({
             orderId: { $regex: search, $options: "i" }  
         })
@@ -28,6 +28,8 @@ const getOrders = async (req, res) => {
         .sort({ createdOn: -1 })
         .limit(limit)
         .skip((page - 1) * limit);
+
+        
 
         const returnOrders = await Return.find({ returnStatus: "Pending" }).populate('userId')
 
@@ -79,7 +81,9 @@ const updateOrder = async (req, res) => {
         }
         order.status = status;
         order.orderedItems.forEach(item => {
+            if(item.itemStatus != "cancelled"){
             item.itemStatus = status;
+            }
         });
 
         const updatedOrder = await order.save()
@@ -119,16 +123,31 @@ const cancelOrder = async (req, res) => {
         if (order.status === 'cancelled') {
             return res.status(400).json({ success: false, message: "Order is already cancelled" });
         }
+
+
+        let reduceAmount = 0
+
+        order.orderedItems.forEach((item) => {
+            if (item.itemStatus != "processing") {
+
+                reduceAmount += item.totalPrice
+
+            }
+        })
+
+
+
+
         if(order.PaymentMethod!=='cod' && order.paymentStatus !== 'failed' ){
             const wallet = await Wallet.findOne({ userId: order.userId });
             if (!wallet) {
                 
                 const newWallet = new Wallet({
                     userId: order.userId,
-                    balance: order.finalAmount,  
+                    balance: order.finalAmount - reduceAmount,  
                     transactions: [
                         {
-                            amount: order.finalAmount,
+                            amount: order.finalAmount - reduceAmount,
                             type: "credit",
                             description: "Cancelled Order",
                             orderId:orderId
@@ -141,9 +160,9 @@ const cancelOrder = async (req, res) => {
                 console.log("New wallet created with credited amount!");
             } else {
                 
-                wallet.balance += order.finalAmount;
+                wallet.balance += order.finalAmount - reduceAmount;
                 wallet.transactions.push({
-                    amount: order.finalAmount,
+                    amount: order.finalAmount - reduceAmount,
                     type: "credit",
                     description: "Cancelled Order",
                     orderId:orderId
@@ -157,6 +176,12 @@ const cancelOrder = async (req, res) => {
         }
 
         order.status = 'cancelled';
+        order.currentAmount = 0
+        order.orderedItems.forEach((item) => {
+            if (item.itemStatus === "processing") {
+                item.itemStatus = "cancelled";
+            }
+        })
         await order.save();
 
 
@@ -185,43 +210,97 @@ const approveReturn = async (req, res) => {
             return res.status(404).json({ success: false, message: "Order not found" });
         }
         const returnOrder = await Return.findOne({ orderId: order.orderId });
-        console.log("returnOrder:", returnOrder)
-
         
+
+        let reduceAmount = 0
+
+        let finalAmount = 0
+        
+        if(returnOrder.returnType == "full"){
+
+
         if (order.status !== "Return Requested") {
             return res.status(400).json({ success: false, message: "Order is not in return requested state" });
         }
+         
+        returnOrder.returnItems.forEach((item)=>{
+            if(item.itemReturnStatus == "Pending"){
+                item.itemReturnStatus = "Returned"
+            }
+        })
+        
 
+        order.status = "Returned";
+
+        order.orderedItems.forEach((item)=>{
+           if(item.itemStatus !== "Return Requested"){
+            reduceAmount+= item.totalPrice 
+           }
+        })
+
+         finalAmount  = order.finalAmount - reduceAmount
+
+         order.currentAmount = 0
+
+         }
+
+         if(returnOrder.returnType == "single"){
+            
+            returnOrder.returnItems.forEach((item)=>{
+                if(item.itemReturnStatus == "Pending"){
+                    item.itemReturnStatus = "Returned"
+                }
+            })
+
+            let currentBalance = 0 
+            
+            order.orderedItems.forEach((item)=>{
+                if(item.itemStatus == "Return Requested"){
+                    currentBalance += item.totalPrice
+                }
+            })
+
+            finalAmount = currentBalance
+
+            order.currentAmount =  order.currentAmount - finalAmount
+
+
+         }
 
 
         
-        order.status = "Returned";
+        let itemStock = []
+
         order.orderedItems.forEach((item)=>{
             if(item.itemStatus === "Return Requested"){
-            item.itemStatus = "Returned"
+               itemStock.push({
+                productId:item.productId,
+                quantity:item.quantity
+               })
+               item.itemStatus = "Returned"
             }
         })
+        
+
+
         await order.save();
+
 
         returnOrder.returnStatus = "Returned"
         await returnOrder.save()
 
-        for (const item of order.orderedItems) {
+        for (const item of itemStock) {
+
             const product = await Product.findById(item.productId); 
 
             if (product) {
                 product.quantity += item.quantity; 
                 await product.save(); 
             }
+
         }
 
-        let reduceAmount = 0
-
-        order.orderedItems.forEach((item)=>{
-           if(item.itemStatus !== "Returned"){
-            reduceAmount+= item.totalPrice 
-           }
-        })
+        
 
         const wallet = await Wallet.findOne({ userId: order.userId });
 
@@ -229,10 +308,10 @@ const approveReturn = async (req, res) => {
             
             const newWallet = new Wallet({
                 userId: order.userId,
-                balance: order.finalAmount - reduceAmount,  
+                balance: finalAmount,  
                 transactions: [
                     {
-                        amount: order.finalAmount - reduceAmount,
+                        amount: finalAmount,
                         type: "credit",
                         description: "Returned Order",
                         orderId:orderId
@@ -244,9 +323,9 @@ const approveReturn = async (req, res) => {
             console.log("New wallet created with credited amount!");
         } else {
             
-            wallet.balance += order.finalAmount;
+            wallet.balance += finalAmount;
             wallet.transactions.push({
-                amount: order.finalAmount,
+                amount: finalAmount,
                 type: "credit",
                 description: "Returned Order",
                 orderId:orderId
@@ -284,11 +363,28 @@ const rejectReturn = async (req, res) => {
             return res.status(404).json({ success: false, message: "Return request not found" });
         }
 
+
+        if(returnOrder.returnType == "full"){
         order.status = "Rejected";
+        }
+        order.orderedItems.forEach((item) => {
+            if (item.itemStatus === "Return Requested") {
+                item.itemStatus = "Rejected";
+            }
+        })
+
+        returnOrder.returnItems.forEach((item)=> {
+            if(item.itemReturnStatus == "Pending"){
+            item.rejectReason = reason
+            itemReturnStatus = "Rejected"
+            }
+        })
+
         await order.save();
         returnOrder.returnStatus = "Rejected";
         returnOrder.rejectReason = reason; 
         await returnOrder.save(); 
+        
 
         return res.json({ success: true, message: "Return request rejected successfully" });
 

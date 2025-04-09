@@ -39,12 +39,21 @@ const salesReportData = async (req,res)=>{
         };
 
         // Fetch orders with user details
-        const orders = await Order.find(query)
+        let orders = await Order.find(query)
             .populate({
                 path: 'userId',
                 select: 'name'
             })
             .sort({ createdOn: -1 }); 
+
+        
+            let allowedStatuses = ["delivered", "processing", "shipped", "Rejected"];
+
+            orders = orders.filter(order =>
+              allowedStatuses.includes(order.status)
+            );
+
+            console.log("orders", orders)
 
         
         let totalOrders = orders.length;
@@ -96,11 +105,18 @@ async function getFormattedOrders(startDate, endDate) {
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
   
-    const orders = await Order.find({
+    let orders = await Order.find({
       createdOn: { $gte: start, $lte: end }
     })
     .populate('userId', 'name')
     .sort({ createdOn: -1 });
+
+    let allowedStatuses = ["delivered", "processing", "shipped", "Rejected"];
+
+            orders = orders.filter(order =>
+              allowedStatuses.includes(order.status)
+            );
+
   
     return orders.map(order => ({
       orderId: order.orderId,
@@ -108,7 +124,8 @@ async function getFormattedOrders(startDate, endDate) {
       customerName: order.userId?.name || 'Guest',
       status: order.status,
       discountAmount: order.discount,
-      finalAmount: order.finalAmount
+      finalAmount: order.finalAmount,
+      currentAmount: order.currentAmount
     }));
   }
 
@@ -119,7 +136,7 @@ async function getFormattedOrders(startDate, endDate) {
     
     
     const totalOrders = orders.length;
-    const totalSales = orders.reduce((sum, order) => sum + order.finalAmount, 0);
+    const totalSales = orders.reduce((sum, order) => sum + order.currentAmount, 0);
     const totalDiscount = orders.reduce((sum, order) => sum + order.discountAmount, 0);
 
     const doc = new PDFDocument({ margin: 30, size: 'A4' });

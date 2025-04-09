@@ -52,6 +52,9 @@ const orderSchema = new Schema({
         required : true
 
     },
+    currentAmount : {
+        type : Number
+    },
     address: {
         type: Schema.Types.ObjectId,
         ref: "User",

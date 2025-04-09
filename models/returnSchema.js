@@ -16,6 +16,25 @@ const returnSchema = new Schema({
         ref: "Order",
         required: true
     },
+    returnType:{
+        type: String,
+        enum: ["single", "full"]
+    },
+    returnItems:[
+        { 
+            itemId: {
+                 type: Schema.Types.ObjectId
+                },
+            returnReason: { type: String},
+            rejectReason : {
+                type: String,  
+                default: "none"
+        
+            },
+            itemReturnStatus: { type: String, default: "Pending" }
+
+        }
+    ],
     returnReason: {
         type: String,
         required: true

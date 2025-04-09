@@ -391,6 +391,15 @@ const securePassword = async (password) => {
     }
 }
 
+const generateReferralCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+};
+
 const verifyOtp = async (req, res) => {
     try {
         const { otp } = req.body
@@ -398,11 +407,14 @@ const verifyOtp = async (req, res) => {
         if (otp == req.session.userOtp) {
             const user = req.session.userData
             const passwordHash = await securePassword(user.password)
+            const referalCode = generateReferralCode()
             const saveUserData = new User({
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                password: passwordHash
+                password: passwordHash,
+                referalCode:referalCode
+
             })
             await saveUserData.save()
             

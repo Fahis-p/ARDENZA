@@ -74,7 +74,7 @@ router.post("/rejectReturn/:orderId",adminAuth,adOrderController.rejectReturn)
 //Main Dashboard
 router.get('/dashboardData',adminAuth,dashMainController.dashboardData)
 
-//Sales Summary (dashboard 2)
+//Sales Summary (dashboard 2) 
 
 router.get("/salesSummary",adminAuth,dashSummaryController.loadSummarypage)
 router.get('/salesSummaryReport',adminAuth,dashSummaryController.salesSummaryReport)

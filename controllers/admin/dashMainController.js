@@ -34,8 +34,9 @@ const dashboardData = async (req,res)=>{
 
       const totalRevenue = await Order.aggregate([
         { $match: dateFilter },
-        { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+        { $group: { _id: null, total: { $sum: '$currentAmount' } } }
         ])
+     
       const  totalCustomers = await  Order.aggregate([
             { $match: dateFilter },
             { $group: { _id: '$userId' } },
@@ -48,7 +49,7 @@ const dashboardData = async (req,res)=>{
         { $match: dateFilter },
         { $group: { 
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdOn' } },
-          total: { $sum: '$finalAmount' }
+          total: { $sum: '$currentAmount' }
         }},
         { $sort: { _id: 1 } }
       ])
@@ -117,7 +118,7 @@ const dashboardData = async (req,res)=>{
       console.log("topProducts",topProducts)
 
 
-      const recentOrders = await  Order.find(dateFilter)
+      let recentOrders = await  Order.find(dateFilter)
       .sort({ createdOn: -1 })
       .limit(5)
       .populate({
@@ -126,6 +127,14 @@ const dashboardData = async (req,res)=>{
       })
       .populate('userId', 'name email') 
       .lean()
+
+
+      recentOrders = recentOrders.map(order => ({
+        ...order,
+        orderedItems: order.orderedItems.filter(item =>
+          ["delivered","processing", "shipped", "Rejected"].includes(item.itemStatus)
+        )
+      }));
 
       console.log("recentOrders",recentOrders[0].orderedItems)
 
