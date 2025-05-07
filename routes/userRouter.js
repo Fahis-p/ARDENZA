@@ -19,7 +19,7 @@ router.get("/",userController.loadHomepage)
 router.get("/shop",userAuth,userController.loadShoppingPage)
 router.get("/filter",userController.filterProduct)
 router.get("/filterPrice",userController.filterByPrice)
-router.post("/search",userController.searchProducts)
+router.get("/search",userController.searchProducts)
 
 //sighnup management
 router.get("/signup",userController.loadSignup)

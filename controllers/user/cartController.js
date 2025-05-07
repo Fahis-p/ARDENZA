@@ -136,6 +136,8 @@ const grandTotal = cartDetailsFull.items.reduce((acc, item) => acc + item.totalP
 
   const addToCart = async (req, res) => {
     try {
+
+        
         const userId = req.session.user?._id;
         const { productId, quantity } = req.body;
 
@@ -155,6 +157,8 @@ const grandTotal = cartDetailsFull.items.reduce((acc, item) => acc + item.totalP
         if (product.quantity < quantity) {
             return res.status(400).json({ success: false, message: "Not enough stock available" });
         }
+
+        console.log("reached 2")
 
         let cart = await Cart.findOne({ userId });
 
@@ -199,6 +203,8 @@ const grandTotal = cartDetailsFull.items.reduce((acc, item) => acc + item.totalP
         }
 
         await cart.save();
+
+        console.log("reached 3")
         
         let wishlist = await Wishlist.findOne({ userId });
         if (wishlist) {

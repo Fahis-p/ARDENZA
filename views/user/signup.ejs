@@ -74,21 +74,21 @@
         font-size: 1.5rem;
       }
       .spacer {
-        height: 30px; /* Adjust the height as needed */
+        height: 30px; 
       }
       .form-group label {
-        font-size: 0.875rem; /* Decrease label size */
+        font-size: 0.875rem; 
       }
       .form-control {
-        font-size: 0.875rem; /* Decrease input text size */
-        padding: 0.5rem; /* Decrease padding */
+        font-size: 0.875rem; 
+        padding: 0.5rem; 
       }
       .btn-primary {
-        padding: 0.5rem 1rem; /* Decrease button padding */
-        font-size: 0.875rem; /* Decrease button text size */
+        padding: 0.5rem 1rem; 
+        font-size: 0.875rem; 
       }
       .card-title {
-        font-size: 1.25rem; /* Decrease card title size */
+        font-size: 1.25rem; 
       }
       .signup-image .sign-in-link {
         color: #333;
@@ -215,25 +215,15 @@
     <div class="spacer"></div>
     <%- include("../../views/partials/user/footer") %>
     <script>
-      const nameid = document.getElementById("name")
-      const emailid = document.getElementById("email")
-      const phoneid = document.getElementById("phone")
-      const passid = document.getElementById("password")
-      const cpassid = document.getElementById("confirm-password")
-      const error1 = document.getElementById("error1")
-      const error2 = document.getElementById("error2")
-      const error3 = document.getElementById("error3")
-      const error4 = document.getElementById("error4")
-      const error5 = document.getElementById("error5")
-      const signform = document.getElementById("signform")
+      
+      function nameValidateChecking(nameid,error1){
 
-      function nameValidateChecking(e){
       const nameval = nameid.value
       const namepattern = /^[A-Za-z\s]+$/;
       if(nameval.trim()===""){
         error1.style.display = "block"
         error1.innerHTML  = "please enter a valid name"
-
+        
       }else if(!namepattern.test(nameval)){
         error1.style.display = "block"
         error1.innerHTML = "Name only can contain aplhabets and spaces"
@@ -241,10 +231,12 @@
         error1.style.display = "none"
         error1.innerHTML = ""
       }
+       
+      
 
       } 
 
-      function emailValidateChecking(e){
+      function emailValidateChecking(emailid,error2){
         
       const emailval = emailid.value
       const emailpattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/
@@ -263,7 +255,7 @@
 
       } 
 
-      function phoneValidateChecking(e) {
+      function phoneValidateChecking(phoneid,error3) {
     const phoneval = phoneid.value;
     const phonepattern = /^[6-9]\d{9}$/; // Validates a 10-digit Indian phone number starting with 6-9
 
@@ -279,7 +271,7 @@
     }
 }
 
-function passValidateChecking(e) {
+function passValidateChecking(passid,cpassid,error4,error5) {
     const passval = passid.value;
     const cpassval = cpassid.value
     const passpattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -308,11 +300,26 @@ function passValidateChecking(e) {
 
       
       document.addEventListener("DOMContentLoaded",function(){
+
+      const nameid = document.getElementById("name")
+      const emailid = document.getElementById("email")
+      const phoneid = document.getElementById("phone")
+      const passid = document.getElementById("password")
+      const cpassid = document.getElementById("confirm-password")
+      const error1 = document.getElementById("error1")
+      const error2 = document.getElementById("error2")
+      const error3 = document.getElementById("error3")
+      const error4 = document.getElementById("error4")
+      const error5 = document.getElementById("error5")
+      const signform = document.getElementById("signform")
+
         signform.addEventListener("submit", function(e){
-          nameValidateChecking()
-          emailValidateChecking()
-          phoneValidateChecking()
-          passValidateChecking()
+          e.preventDefault();
+  
+          nameValidateChecking(nameid,error1)
+          emailValidateChecking(emailid,error2)
+          phoneValidateChecking(phoneid,error3)
+          passValidateChecking(passid,cpassid,error4,error5)
 
           if(
 
@@ -333,6 +340,8 @@ function passValidateChecking(e) {
           if(error1.innerHTML||error2.innerHTML||error3.innerHTML||error4.innerHTML||error5.innerHTML){
             e.preventDefault()
 
+          }else{
+            this.submit()
           }
 
         })

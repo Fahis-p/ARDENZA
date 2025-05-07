@@ -1,4 +1,4 @@
-<%- include("../../views/partials/user/header") %>
+<%- include("../../views/partials/user/header",{ activePage: 'shop' }) %>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> ;
     <link rel="stylesheet" href="/css/style-productdetails.css">
 
@@ -144,7 +144,29 @@
                                         </ul>
                                     </div>
                                 </div>
+
+                                
+
+
+
                             </div>
+                            
+                            <div class="row">
+                                
+                                <% suggestion.forEach(product => { %>
+                                  <div class="col-md-3 mb-4">
+                                    <a href="/productDetails?id=<%= product._id %>" class="text-decoration-none text-dark">
+                                      <div class="card h-100">
+                                        <img src="/uploads/re-image/<%= product.productImage[0] %>" class="card-img-top" alt="<%= product.productName %>">
+                                        <div class="card-body text-center">
+                                          <h5 class="card-title"><%= product.productName %></h5>
+                                          
+                                        </div>
+                                      </div>
+                                    </a>
+                                  </div>
+                                <% }) %>
+                              </div>
 
                         </div>
                     </div>

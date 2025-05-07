@@ -1,4 +1,4 @@
-<%- include("../../views/partials/user/header") %>
+<%- include("../../views/partials/user/header", { activePage: 'shop' }) %>
   <style>
     .main-container {
       max-width: 1200px;
@@ -109,11 +109,13 @@
 
     .product-card {
       width: calc(33.333% - 20px);
+      height: fit-content;
       border: 1px solid #ddd;
       padding: 15px;
       border-radius: 8px;
       text-align: center;
       position: relative;
+      
     }
 
 
@@ -227,13 +229,13 @@
     <section class="shop-page container">
       <div class="shop-topbar">
         <div class="search-bar">
-          <form action="/search" method="POST" class="search-form">
-            <input type="text" name="query" placeholder="Search items..." class="search-input"
+          <form action="/search" method="GET" class="search-form">
+            <input type="text" name="search" placeholder="Search items..." class="search-input"
               value="<%= typeof search !== 'undefined' ? search : '' %>" />
             <button type="submit" class="search-button">Search</button>
           </form>
         </div>
-        <a href="/shop" class="btn btn-primary btn-sm ms-2">Clear Filters</a>
+        <a href="/shop?clear=true" class="btn btn-primary btn-sm ms-2">Clear Filters</a>
       </div>
 
       <div class="product-list-container">
@@ -265,8 +267,8 @@
               <ul>
                 <% for (let i=0; i < brand.length; i++) { %>
                   <li class="filter-item" style="list-style: none;">
-                    <a href="/filter?brand=<%= brand[i]._id %>"
-                      class="<%= selectedBrand && selectedBrand.toString() === brand[i]._id.toString() ? 'active-category' : '' %>">
+                    <a href="/filter?brand=<%= brand[i].brandName %>"
+                      class="<%= selectedBrand && selectedBrand.toString() === brand[i].brandName.toString() ? 'active-category' : '' %>">
                       <%= brand[i].brandName %>
                     </a>
                   </li>
@@ -316,7 +318,7 @@
 
 
         <main class="product-grid">
-
+          <% if (products && products.length > 0) { %>
           <%for(let i=0;i<products.length;i++){%>
 
             <div class="product-card">
@@ -338,6 +340,9 @@
                 onclick="addToCart('<%=products[i]._id%>','<%= i %>')">Add to Cart</button>
             </div>
             <%}%>
+            <% } else { %>
+                  <div>No products found on this filter</div>
+              <% } %>
         </main>
       </div>
 

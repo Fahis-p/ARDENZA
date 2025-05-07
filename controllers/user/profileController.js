@@ -39,8 +39,7 @@ const sendVerificationEmail = async (email,otp)=>{
             subject:"your OTP Password reset",
             text:`your OTP is ${otp}`,
             html:`<b><h4>Your OTP: ${otp}</h4><br></br></b>`
-        }
-        
+        }        
         const info = await transporter.sendMail(mailOptions);
         console.log("Email sent:",info.messageId)
 
@@ -100,6 +99,7 @@ const getForgotEmailValid = async (req,res)=>{
 
         }else{
             res.render("forgot-password",{
+                user:null,
                 message:"User with this email doesnot exist"
             });
 
