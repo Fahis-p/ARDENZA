@@ -24,6 +24,13 @@
         .preview {
             display: flex;
         }
+
+        .error-message {
+            color: red;
+            font-size: 0.875rem;
+            margin-top: 4px;
+            
+        }
     </style>
     <section class="content-main">
         <div class="row">
@@ -46,6 +53,7 @@
                             <div class="col-lg-4 mb-4">
                                 <label class="form-label">Brand</label>
                                 <select class="form-select border" name="brand">
+                                    <option value="" disabled selected>Choose one</option>
                                     <%for(let i=0;i<brand.length;i++){%>
 
                                         <option value="<%=brand[i].brandName%>">
@@ -74,9 +82,9 @@
                                     <div class="mb-4">
                                         <label class="form-label">Sale price</label>
                                         <input placeholder="$" name="salePrice" type="text" class="form-control border">
-
+                                        <div id="salePrice-error" class="error-message"></div>
                                     </div>
-                                    <div id="salePrice-error" class="error-message"></div>
+
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="mb-4">
@@ -103,6 +111,7 @@
                                         <div class="col-sm-6 mb-3">
                                             <label class="form-label">Category</label>
                                             <select class="form-select border" style="width: 150px;" name="category">
+                                                <option value="" disabled selected>Choose one</option>
                                                 <%for(let i=0;i<cat.length;i++){%>
 
                                                     <option value="<%=cat[i].name%>">
@@ -196,10 +205,10 @@
                 handleFileUpload(event, index);
                 const saveButton = document.querySelector(`.crop-btn[data-index="${index}"]`);
                 if (saveButton) {
-                    saveButton.innerText = 'Save'; 
-                    saveButton.disabled = false; 
-                    saveButton.classList.remove('btn-secondary'); 
-                    saveButton.classList.add('btn-dark'); 
+                    saveButton.innerText = 'Save';
+                    saveButton.disabled = false;
+                    saveButton.classList.remove('btn-secondary');
+                    saveButton.classList.add('btn-dark');
                 }
             }
         });
@@ -268,7 +277,7 @@
                     const file = new File([blob], `cropped_image_${index}.png`, { type: 'image/png' });
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(file);
-                    inputFile.files = dataTransfer.files; 
+                    inputFile.files = dataTransfer.files;
                 }, 'image/png');
 
                 if (image) image.style.display = 'none';
@@ -280,8 +289,8 @@
                 if (button) {
                     button.innerText = 'Saved';
                     button.disabled = true;
-                    button.classList.remove('btn-dark'); 
-                    button.classList.add('btn-secondary'); 
+                    button.classList.remove('btn-dark');
+                    button.classList.add('btn-secondary');
                 }
 
             }

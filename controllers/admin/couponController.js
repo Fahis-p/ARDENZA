@@ -5,10 +5,24 @@ const mongoose = require("mongoose")
 
 const loadCoupon = async (req,res)=>{
     try {
-         
+        
+        const search = req.query.search || "";
+        const page = parseInt(req.query.page) || 1;
+        const limit = 4;
+        const skip = (page - 1) * limit;
+
         const findCoupons = await Coupon.find({})
 
-        return res.render("coupon",{coupon:findCoupons})
+        const totalCoupons = await Coupon.countDocuments()
+        const totalPages = Math.ceil(totalCoupons / limit)
+        
+
+        return res.render("coupon",{
+            coupon:findCoupons,
+            currentPage: page,
+            totalPages: totalPages,
+            search
+        })
     } catch (error) {
 
         return res.redirect("/pageerror")
